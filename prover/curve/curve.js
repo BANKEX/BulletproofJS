@@ -3,10 +3,13 @@ exports.__esModule = true;
 var bigInteger_1 = require("../bigInteger/bigInteger");
 var elliptic_1 = require("../elliptic");
 var buffer_1 = require("buffer");
+var utils_1 = require("../elliptic/lib/elliptic/utils");
+var ethereumjs_util_1 = require("ethereumjs-util");
 // import Buffer
 var EC = elliptic_1.ec;
 var CURVE = elliptic_1.curve.base;
 var POINT = CURVE.BasePoint;
+var ZERO = bigInteger_1.toBI(0, 10);
 var emptyBuffer = buffer_1.Buffer.alloc(0);
 var ECCurve = /** @class */ (function () {
     function ECCurve(name) {
@@ -22,7 +25,40 @@ var ECCurve = /** @class */ (function () {
         return this.curveRef.point(x, y, null, null);
     };
     ECCurve.prototype.hash = function (input) {
-        return this.curveRef.hash(input);
+        return ethereumjs_util_1.sha3(input);
+    };
+    ECCurve.prototype.hashToBigInteger = function (input) {
+        var buff = ethereumjs_util_1.sha3(input);
+        var bn = new bigInteger_1.BNCLASS(buff, 16, "be");
+        return bn;
+    };
+    ECCurve.prototype.validate = function (point) {
+        return this.curveRef.curve.validate(point.pointRef);
+    };
+    ECCurve.prototype.hashInto = function (input) {
+        // valid only for short curves
+        // const hex = input.toString("hex")
+        // let seed = toBI(hex, 16).mod(this.primeFieldSize);
+        var seed = new bigInteger_1.BNCLASS(input, 16, "be").umod(this.primeFieldSize);
+        var ONE = bigInteger_1.toBI(1, 10);
+        var ZERO = bigInteger_1.toBI(0, 10);
+        seed = seed.sub(ONE);
+        var i = 1;
+        var point;
+        do {
+            try {
+                seed = seed.add(ONE);
+                point = this.curveRef.curve.pointFromX(seed, true);
+                break;
+            }
+            catch (error) {
+            }
+            i++;
+        } while (true);
+        console.log(i);
+        var ecpoint = new ECPoint(point, this);
+        console.log("[0x" + ecpoint.getX().toString(16) + ", 0x" + ecpoint.getY().toString(16) + "]");
+        return ecpoint;
     };
     return ECCurve;
 }());
@@ -31,6 +67,7 @@ var ECPoint = /** @class */ (function () {
     function ECPoint(p, curve) {
         this.pointRef = p;
         this.curve = curve;
+        utils_1.assert(curve.curveRef.curve.validate(p));
     }
     ECPoint.prototype.add = function (another) {
         var p = this.pointRef.add(another.pointRef);
@@ -61,13 +98,12 @@ var ECPoint = /** @class */ (function () {
     ECPoint.prototype.getY = function () {
         return this.pointRef.getY();
     };
+    ECPoint.prototype.serialize = function () {
+        return buffer_1.Buffer.concat([this.getX().toArrayLike(buffer_1.Buffer, "be", 32), this.getY().toArrayLike(buffer_1.Buffer, "be", 32)]);
+    };
+    ECPoint.prototype.equals = function (other) {
+        return this.getX().cmp(other.getX()) == 0 && this.getY().cmp(other.getY()) == 0;
+    };
     return ECPoint;
 }());
 exports.ECPoint = ECPoint;
-var bn256 = new ECCurve("bn256");
-var generator = bn256.generator;
-console.log(generator.getX().toString(10));
-console.log(generator.getY().toString(10));
-var doubled = generator.mul(bigInteger_1.toBI(2));
-console.log(doubled.getX().toString(10));
-console.log(doubled.getY().toString(10));

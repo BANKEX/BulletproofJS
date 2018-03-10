@@ -1,9 +1,7 @@
 'use strict';
 
 var curves = exports;
-var Web3 = require('web3');
 var hash = require('hash.js');
-var keccak256 = Web3.utils.keccak256;
 var elliptic = require('../elliptic');
 
 var assert = elliptic.utils.assert;
@@ -47,7 +45,7 @@ defineCurve('bn256', {
   a: '0',
   b: '3',
   n: '30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001',
-  hash: keccak256,
+  hash: hash.sha256,
   gRed: false,
   g: [
     '1',

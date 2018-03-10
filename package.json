@@ -9,9 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bignumber.js": "^6.0.0",
+    "bn.js": "^4.11.8",
     "elliptic": "^6.4.0",
     "ethereumjs-util": "^5.1.4",
+    "secure-random": "^1.1.1",
     "web3": "^1.0.0-beta.30"
   }
 }

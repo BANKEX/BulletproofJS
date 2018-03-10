@@ -1,11 +1,11 @@
 import {BigInteger, toBI} from "../bigInteger/bigInteger";
 import {ECPoint} from "../curve/curve";
 
-class FieldVector{
-    private a: [BigInteger]
+export class FieldVector {
+    private a: BigInteger[]
     private q: BigInteger
 
-    constructor (a: [BigInteger], q: BigInteger) {
+    constructor (a: BigInteger[], q: BigInteger) {
         this.a = a;
         this.q = q;
     }
@@ -13,7 +13,7 @@ class FieldVector{
     innerPoduct(other: FieldVector): BigInteger {
         // assert(other.a.length === this.a.length);
         // assert(this.q === other.q);
-        let res = toBI(0);
+        let res = toBI(0, 10);
         for (let i = 0; i < this.a.length; i++) {
             res = res.add(other.a[i].mul(this.a[i]))
         }
@@ -23,7 +23,7 @@ class FieldVector{
     hadamard(other: FieldVector) {
         // assert(other.a.length === this.a.length);
         // assert(this.q === other.q);
-        let res = [] as [BigInteger];
+        let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(other.a[i].mul(this.a[i]).mod(this.q));
         }
@@ -31,7 +31,7 @@ class FieldVector{
     }
 
     times(scalar: BigInteger): FieldVector {
-        let res = [] as [BigInteger];
+        let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(scalar.mul(this.a[i]).mod(this.q));
         }
@@ -41,7 +41,7 @@ class FieldVector{
     addVector(other: FieldVector): FieldVector {
         // assert(other.a.length === this.a.length);
         // assert(this.q === other.q);
-        let res = [] as [BigInteger];
+        let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(other.a[i].add(this.a[i]).mod(this.q));
         }
@@ -49,7 +49,7 @@ class FieldVector{
     }
 
     addScalar(scalar: BigInteger): FieldVector {
-        let res = [] as [BigInteger];
+        let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(scalar.add(this.a[i]).mod(this.q));
         }
@@ -59,7 +59,7 @@ class FieldVector{
     subtractVector(other: FieldVector): FieldVector {
         // assert(other.a.length === this.a.length);
         // assert(this.q === other.q);
-        let res = [] as [BigInteger];
+        let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(other.a[i].sub(this.a[i]).mod(this.q));
         }
@@ -67,7 +67,7 @@ class FieldVector{
     }
 
     sum(): BigInteger {
-        let accumulator = toBI(0);
+        let accumulator = toBI(0, 10);
         for (let i = 0; i < this.a.length; i++) {
             accumulator.add(this.a[i]);
         }
@@ -75,7 +75,7 @@ class FieldVector{
     }
 
     invert(): FieldVector {
-        let res = [] as [BigInteger];
+        let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(this.a[i].invm(this.q));
         }
@@ -94,19 +94,19 @@ class FieldVector{
         return this.a.length;
     }
 
-    subVector(start: number, end: number) : FieldVector{
-        const res = this.a.slice(start, end) as [BigInteger];
+    subVector(start: number, end: number) : FieldVector {
+        const res = this.a.slice(start, end) as BigInteger[];
         return new FieldVector(res, this.q);
     }
 
-    getVector() : [BigInteger] {
+    getVector() : BigInteger[] {
         return this.a;
     }
 
 
     static pow(k: BigInteger, n: number, q: BigInteger) : FieldVector {
-        let res = [] as [BigInteger];
-        let element = toBI(1);
+        let res = [] as BigInteger[];
+        let element = toBI(1, 10);
         res.push(element)
         for (let i = 1; i < n; i++) {
             element = element.mul(k);

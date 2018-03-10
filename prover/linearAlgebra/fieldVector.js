@@ -9,7 +9,7 @@ var FieldVector = /** @class */ (function () {
     FieldVector.prototype.innerPoduct = function (other) {
         // assert(other.a.length === this.a.length);
         // assert(this.q === other.q);
-        var res = bigInteger_1.toBI(0);
+        var res = bigInteger_1.toBI(0, 10);
         for (var i = 0; i < this.a.length; i++) {
             res = res.add(other.a[i].mul(this.a[i]));
         }
@@ -57,7 +57,7 @@ var FieldVector = /** @class */ (function () {
         return new FieldVector(res, this.q);
     };
     FieldVector.prototype.sum = function () {
-        var accumulator = bigInteger_1.toBI(0);
+        var accumulator = bigInteger_1.toBI(0, 10);
         for (var i = 0; i < this.a.length; i++) {
             accumulator.add(this.a[i]);
         }
@@ -88,7 +88,7 @@ var FieldVector = /** @class */ (function () {
     };
     FieldVector.pow = function (k, n, q) {
         var res = [];
-        var element = bigInteger_1.toBI(1);
+        var element = bigInteger_1.toBI(1, 10);
         res.push(element);
         for (var i = 1; i < n; i++) {
             element = element.mul(k);
@@ -113,3 +113,4 @@ var FieldVector = /** @class */ (function () {
     };
     return FieldVector;
 }());
+exports.FieldVector = FieldVector;
