@@ -2,7 +2,12 @@
 exports.__esModule = true;
 var bigInteger_1 = require("../bigInteger/bigInteger");
 var FieldVector = /** @class */ (function () {
+    // private red: any
     function FieldVector(a, q) {
+        // this.red = BNCLASS.mont(q);
+        // this.a = a.map((el) => {
+        //     return el.toRed(this.red);
+        // });
         this.a = a;
         this.q = q;
     }

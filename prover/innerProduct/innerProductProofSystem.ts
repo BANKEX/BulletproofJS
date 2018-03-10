@@ -29,6 +29,7 @@ export class InnerProductProofSystem{
             const gString = "G"+i
             console.log(gString);
             const gHash = group.hash(Buffer.from(gString, "utf8"))
+            console.log(gHash.toString('hex'))
             const g = group.hashInto(gHash)
             gPoints.push(g)
             let hString = "H"+i

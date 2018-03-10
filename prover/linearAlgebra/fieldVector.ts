@@ -1,11 +1,17 @@
-import {BigInteger, toBI} from "../bigInteger/bigInteger";
+import {BigInteger, toBI, BNCLASS} from "../bigInteger/bigInteger";
 import {ECPoint} from "../curve/curve";
 
 export class FieldVector {
     private a: BigInteger[]
     private q: BigInteger
+    // private red: any
 
     constructor (a: BigInteger[], q: BigInteger) {
+
+        // this.red = BNCLASS.mont(q);
+        // this.a = a.map((el) => {
+        //     return el.toRed(this.red);
+        // });
         this.a = a;
         this.q = q;
     }

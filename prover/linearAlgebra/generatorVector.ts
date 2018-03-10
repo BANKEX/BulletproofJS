@@ -1,5 +1,7 @@
 import {BigInteger, toBI} from "../bigInteger/bigInteger";
 import {ECPoint, ECCurve} from "../curve/curve";
+import { assert } from "../elliptic/lib/elliptic/utils";
+import { FieldVector } from "./fieldVector";
 
 export class GeneratorVector {
     private gs : ECPoint[];
@@ -19,24 +21,25 @@ export class GeneratorVector {
     }
 
     commit(exponents: BigInteger[]) : ECPoint {
+        assert(exponents.length === this.gs.length);
         let accumulator = this.curve.zero;
-        const multiplies = this.gs.map((point: ECPoint, index: number) : ECPoint => {
-            console.log(point.getX().toString(16))
-            console.log(exponents[index].toString(16))
-            return point.mul(exponents[index]);
-        })
-        let res = multiplies[0]
-        console.log(res.getX().toString(16))
-        for (let i = 1; i < multiplies.length; i++) {
-            console.log()
-            res = res.add(multiplies[i])
-            console.log(res.getX().toString(16))
-        }
-        console.log(res.getX().toString(16))
-        res = this.gs.reduce((prev:ECPoint , current: ECPoint, index: number) : ECPoint => {
-            return prev.add(current.mul(exponents[index]));
+        const res = this.gs.reduce((prev:ECPoint , current: ECPoint, index: number) : ECPoint => {
+            const newPoint = current.mul(exponents[index])
+            assert(!newPoint.isInfinity());
+            return prev.add(newPoint);
         }, accumulator);
-        console.log(res.getX().toString(16))
+        return res;
+    }
+
+    commitToFieldVector(vec: FieldVector) : ECPoint {
+        const exponents: BigInteger[] = vec.getVector();
+        assert(exponents.length === this.gs.length);
+        let accumulator = this.curve.zero;
+        const res = this.gs.reduce((prev:ECPoint , current: ECPoint, index: number) : ECPoint => {
+            const newPoint = current.mul(exponents[index].umod(this.curve.order))
+            assert(!newPoint.isInfinity());
+            return prev.add(newPoint);
+        }, accumulator);
         return res;
     }
 

@@ -1,5 +1,6 @@
 "use strict";
 exports.__esModule = true;
+var utils_1 = require("../elliptic/lib/elliptic/utils");
 var GeneratorVector = /** @class */ (function () {
     function GeneratorVector(gs, curve) {
         this.gs = gs;
@@ -12,24 +13,25 @@ var GeneratorVector = /** @class */ (function () {
         return this.from(this.gs.slice(start, end));
     };
     GeneratorVector.prototype.commit = function (exponents) {
+        utils_1.assert(exponents.length === this.gs.length);
         var accumulator = this.curve.zero;
-        var multiplies = this.gs.map(function (point, index) {
-            console.log(point.getX().toString(16));
-            console.log(exponents[index].toString(16));
-            return point.mul(exponents[index]);
-        });
-        var res = multiplies[0];
-        console.log(res.getX().toString(16));
-        for (var i = 1; i < multiplies.length; i++) {
-            console.log();
-            res = res.add(multiplies[i]);
-            console.log(res.getX().toString(16));
-        }
-        console.log(res.getX().toString(16));
-        res = this.gs.reduce(function (prev, current, index) {
-            return prev.add(current.mul(exponents[index]));
+        var res = this.gs.reduce(function (prev, current, index) {
+            var newPoint = current.mul(exponents[index]);
+            utils_1.assert(!newPoint.isInfinity());
+            return prev.add(newPoint);
         }, accumulator);
-        console.log(res.getX().toString(16));
+        return res;
+    };
+    GeneratorVector.prototype.commitToFieldVector = function (vec) {
+        var _this = this;
+        var exponents = vec.getVector();
+        utils_1.assert(exponents.length === this.gs.length);
+        var accumulator = this.curve.zero;
+        var res = this.gs.reduce(function (prev, current, index) {
+            var newPoint = current.mul(exponents[index].umod(_this.curve.order));
+            utils_1.assert(!newPoint.isInfinity());
+            return prev.add(newPoint);
+        }, accumulator);
         return res;
     };
     GeneratorVector.prototype.sum = function () {

@@ -20,8 +20,11 @@ export class VectorBase{
     }
 
     commitToTwoVectors(gExp: BigInteger[], hExp:BigInteger[], blinding: BigInteger): ECPoint {
-        return this.gs.commit(gExp).add(this.hs.commit(hExp)).add(this.h.mul(blinding));
-
+        const blind = this.h.mul(blinding);
+        const commitGs = this.gs.commit(gExp);
+        const commitHs = this.hs.commit(hExp);
+        const res = commitGs.add(commitHs).add(blind);
+        return res;
     }
 
     getGs(): GeneratorVector {

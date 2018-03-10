@@ -60,67 +60,34 @@ export class ECCurve {
     
     public hashInto(input: Buffer) : ECPoint {
         // valid only for short curves
-        // const hex = input.toString("hex")
-        // let seed = toBI(hex, 16).mod(this.primeFieldSize);
         let seed = new BNCLASS(input, 16, "be").umod(this.primeFieldSize);
         const ONE = toBI(1, 10);
         const ZERO = toBI(0, 10);
+        let y: BigInteger;
         seed = seed.sub(ONE);
-        let i = 1;
-        let point: ECPoint;
         do {
-            try {
-                seed = seed.add(ONE);
-                point = this.curveRef.curve.pointFromX(seed, true)
+            seed = seed.add(ONE);
+            const x = seed.toRed(this.curveRef.curve.red);
+            let y2;
+            if (this.curveRef.curve.a.cmp(ZERO) == 0) {
+                y2 = x.redSqr().redIMul(x).redIAdd(this.curveRef.curve.b);
+            } else {
+                y2 = x.redSqr().redIMul(x).redIAdd(x.redMul(this.curveRef.curve.a)).redIAdd(this.curveRef.curve.b);
+            }
+            // y = y2.redPow(this.primeFieldSize.add(ONE).div(toBI(4, 10)));
+            y = y2.redSqrt();
+            if (y.redSqr().cmp(y2) === 0) {
                 break;
             }
-            catch(error) {
-
-            }
-            i++;
+            // if (y.redSqr().redSub(y2).cmp(ZERO) === 0) {
+            //     break;
+            // }
         } while (true);
-        console.log(i);
+        // y = y.fromRed();
+        const point = this.curveRef.curve.point(seed, y);
         const ecpoint = new ECPoint(point, this)
-        console.log("[0x" + ecpoint.getX().toString(16) + ", 0x" + ecpoint.getY().toString(16) + "]")
         return ecpoint
     }
-
-    // public hashInto(input: Buffer) : ECPoint {
-    //     // valid only for short curves
-    //     // const hex = input.toString("hex")
-    //     // let seed = toBI(hex, 16).mod(this.primeFieldSize);
-    //     let seed = new BNCLASS(input, 16, "be").umod(this.primeFieldSize);
-    //     const ONE = toBI(1, 10);
-    //     const ZERO = toBI(0, 10);
-    //     let y: BigInteger;
-    //     seed = seed.sub(ONE);
-    //     let i = 1;
-    //     do {
-    //         seed = seed.add(ONE);
-    //         const x = seed.clone().toRed(this.curveRef.curve.red);
-    //         let y2;
-    //         if (this.curveRef.curve.a.cmp(ZERO) == 0) {
-    //             y2 = x.redSqr().redMul(x).redAdd(this.curveRef.curve.b);
-    //         } else {
-    //             y2 = x.redSqr().redMul(x).redAdd(x.redMul(this.curveRef.curve.a)).redAdd(this.curveRef.curve.b);
-    //         }
-    //         y = y2.redPow(this.primeFieldSize.add(ONE).div(toBI(4, 10)));
-    //         // y = y2.redSqrt();
-    //         if (y.redSqr().cmp(y2) == 0) {
-    //             break;
-    //         }
-    //         // if (y.redSqr().redSub(y2).cmp(ZERO) == 0) {
-    //         //     break;
-    //         // }
-    //         i++;
-    //     } while (true);
-    //     console.log(i);
-    //     // y = y.fromRed();
-    //     const point = this.curveRef.curve.point(seed, y);
-    //     const ecpoint = new ECPoint(point, this)
-    //     console.log("[0x" + ecpoint.getX().toString(16) + ", 0x" + ecpoint.getY().toString(16) + "]")
-    //     return ecpoint
-    // }
 
 }
 
@@ -140,23 +107,23 @@ export class ECPoint {
     public curve: ECCurve
     public pointRef: any
     add(another: ECPoint): ECPoint {
-        let p = this.pointRef.add(another.pointRef);
+        const p = this.pointRef.add(another.pointRef);
         return new ECPoint(p, this.curve);
     }
     mul(scalar: BigInteger): ECPoint {
-        let p = this.pointRef.mul(scalar);
+        const p = this.pointRef.mul(scalar);
         return new ECPoint(p, this.curve);
     }
     sub(another: ECPoint) : ECPoint {
-        let p = this.pointRef.add(another.pointRef.neg());
+        const p = this.pointRef.add(another.pointRef.neg());
         return new ECPoint(p, this.curve);
     }
     negate(): ECPoint {
-        let p = this.pointRef.neg();
+        const p = this.pointRef.neg();
         return new ECPoint(p, this.curve);
     }
     inverse(): ECPoint {
-        let p = this.pointRef.inverse();
+        const p = this.pointRef.inverse();
         return new ECPoint(p, this.curve);
     }
     isInfinity(): boolean {

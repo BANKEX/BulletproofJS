@@ -10,7 +10,11 @@ var VectorBase = /** @class */ (function () {
         return this.gs.commit(gExp).add(this.h.mul(blinding));
     };
     VectorBase.prototype.commitToTwoVectors = function (gExp, hExp, blinding) {
-        return this.gs.commit(gExp).add(this.hs.commit(hExp)).add(this.h.mul(blinding));
+        var blind = this.h.mul(blinding);
+        var commitGs = this.gs.commit(gExp);
+        var commitHs = this.hs.commit(hExp);
+        var res = commitGs.add(commitHs).add(blind);
+        return res;
     };
     VectorBase.prototype.getGs = function () {
         return this.gs;

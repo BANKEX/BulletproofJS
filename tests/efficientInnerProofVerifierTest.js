@@ -56,28 +56,33 @@ function testBN256() {
     // const prime = new BN("30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47", 16)
     console.log("H = 0x" + base.getH().getX().toString(16) + ", 0x" + base.getH().getY().toString(16) + "]")
     const as = FieldVector.pow(TWO, 256, group.order);
-    as.getVector().map((v) => {
-        console.log("["+v.toString(10)+"]")
-    })
+    // as.getVector().map((v) => {
+    //     console.log("["+v.toString(10)+"]")
+    // })
     const bs = FieldVector.pow(ONE, 256, group.order);
-    bs.getVector().map((v) => {
-        console.log("["+v.toString(10)+"]")
-    })
-    const g = group.generator
-    const dbl = g.add(g);
-    console.log("c = [0x"+dbl.getX().toString(16) + ", 0x"+dbl.getY().toString(16) + "]")
+    // bs.getVector().map((v) => {
+    //     console.log("["+v.toString(10)+"]")
+    // })
     const witness = new InnerProductWitness(as, bs);
     const innerProduct = as.innerPoduct(bs)
-    console.log(innerProduct.toString(16))
+    console.log("Inner product = " + innerProduct.toString(16))
     const pointA = base.getGs().commit(as.getVector())
-    console.log("c = [0x"+pointA.getX().toString(16) + ", 0x"+pointA.getY().toString(16) + "]")
-    const point = base.commitToTwoVectors(as, bs, as.innerPoduct(bs));
+    console.log("A = [0x"+pointA.getX().toString(16) + ", 0x"+pointA.getY().toString(16) + "]")
+    const pointB = base.getHs().commit(bs.getVector())
+    console.log("B = [0x"+pointB.getX().toString(16) + ", 0x"+pointB.getY().toString(16) + "]")
+    const pointC = pointA.add(pointB).add(base.getH().mul(innerProduct));
+    console.log("C = [0x"+pointC.getX().toString(16) + ", 0x"+pointC.getY().toString(16) + "]")
+    const point = base.commitToTwoVectors(as.getVector(), bs.getVector(), as.innerPoduct(bs));
     console.log("c = [0x"+point.getX().toString(16) + ", 0x"+point.getY().toString(16) + "]")
     const prover = system.getProver();
     const productProof = prover.generateProofFromWitness(base, point, witness);
     console.log(productProof.getL().length);
-    // String lstring = "[" + productProof.getL().stream().map(BouncyCastleECPoint::getPoint).map(ECPoint::normalize).map(p -> "0x"+ p.getXCoord() + " , 0x" + p.getYCoord() ).collect(Collectors.joining(",")) + "]";
-    // System.out.println(lstring);
+    productProof.getL().map((v) => {
+        console.log("c = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
+    })
+    productProof.getR().map((v) => {
+        console.log("c = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
+    })
     console.log(productProof.getA().toString(16));
     console.log(productProof.getB().toString(16));
     // System.out.println(pe.normalize());

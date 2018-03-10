@@ -21,6 +21,7 @@ var InnerProductProofSystem = /** @class */ (function () {
             var gString = "G" + i;
             console.log(gString);
             var gHash = group.hash(buffer_1.Buffer.from(gString, "utf8"));
+            console.log(gHash.toString('hex'));
             var g = group.hashInto(gHash);
             gPoints.push(g);
             var hString = "H" + i;

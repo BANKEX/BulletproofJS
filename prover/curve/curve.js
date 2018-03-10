@@ -37,27 +37,33 @@ var ECCurve = /** @class */ (function () {
     };
     ECCurve.prototype.hashInto = function (input) {
         // valid only for short curves
-        // const hex = input.toString("hex")
-        // let seed = toBI(hex, 16).mod(this.primeFieldSize);
         var seed = new bigInteger_1.BNCLASS(input, 16, "be").umod(this.primeFieldSize);
         var ONE = bigInteger_1.toBI(1, 10);
         var ZERO = bigInteger_1.toBI(0, 10);
+        var y;
         seed = seed.sub(ONE);
-        var i = 1;
-        var point;
         do {
-            try {
-                seed = seed.add(ONE);
-                point = this.curveRef.curve.pointFromX(seed, true);
+            seed = seed.add(ONE);
+            var x = seed.toRed(this.curveRef.curve.red);
+            var y2 = void 0;
+            if (this.curveRef.curve.a.cmp(ZERO) == 0) {
+                y2 = x.redSqr().redIMul(x).redIAdd(this.curveRef.curve.b);
+            }
+            else {
+                y2 = x.redSqr().redIMul(x).redIAdd(x.redMul(this.curveRef.curve.a)).redIAdd(this.curveRef.curve.b);
+            }
+            // y = y2.redPow(this.primeFieldSize.add(ONE).div(toBI(4, 10)));
+            y = y2.redSqrt();
+            if (y.redSqr().cmp(y2) === 0) {
                 break;
             }
-            catch (error) {
-            }
-            i++;
+            // if (y.redSqr().redSub(y2).cmp(ZERO) === 0) {
+            //     break;
+            // }
         } while (true);
-        console.log(i);
+        // y = y.fromRed();
+        var point = this.curveRef.curve.point(seed, y);
         var ecpoint = new ECPoint(point, this);
-        console.log("[0x" + ecpoint.getX().toString(16) + ", 0x" + ecpoint.getY().toString(16) + "]");
         return ecpoint;
     };
     return ECCurve;
