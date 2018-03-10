@@ -13,25 +13,25 @@ var GeneratorVector = /** @class */ (function () {
         return this.from(this.gs.slice(start, end));
     };
     GeneratorVector.prototype.commit = function (exponents) {
-        utils_1.assert(exponents.length === this.gs.length);
+        utils_1.assert(exponents.length === this.gs.length, "Commitment base and vector should have the same length");
         var accumulator = this.curve.zero;
         var res = this.gs.reduce(function (prev, current, index) {
             var newPoint = current.mul(exponents[index]);
-            utils_1.assert(!newPoint.isInfinity());
             return prev.add(newPoint);
         }, accumulator);
+        utils_1.assert(!res.isInfinity(), "Commitment resulted in infinity point");
         return res;
     };
     GeneratorVector.prototype.commitToFieldVector = function (vec) {
         var _this = this;
         var exponents = vec.getVector();
-        utils_1.assert(exponents.length === this.gs.length);
+        utils_1.assert(exponents.length === this.gs.length, "Commitment base and vector should have the same length");
         var accumulator = this.curve.zero;
         var res = this.gs.reduce(function (prev, current, index) {
             var newPoint = current.mul(exponents[index].umod(_this.curve.order));
-            utils_1.assert(!newPoint.isInfinity());
             return prev.add(newPoint);
         }, accumulator);
+        utils_1.assert(!res.isInfinity(), "Commitment resulted in infinity point");
         return res;
     };
     GeneratorVector.prototype.sum = function () {
@@ -40,7 +40,7 @@ var GeneratorVector = /** @class */ (function () {
             return prev.add(current);
         }, accumulator);
     };
-    GeneratorVector.prototype.haddamard = function (exponents) {
+    GeneratorVector.prototype.hadamard = function (exponents) {
         var newVector = this.gs.map(function (current, index) {
             return current.mul(exponents[index]);
         });

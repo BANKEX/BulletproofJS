@@ -16,7 +16,7 @@ var ProofUtils = /** @class */ (function () {
         }
         for (var _a = 0, points_1 = points; _a < points_1.length; _a++) {
             var point = points_1[_a];
-            var buff = point.serialize();
+            var buff = point.serialize(false);
             buffers.push(buff);
         }
         var hashed = this.keccak256(buffer_1.Buffer.concat(buffers));
@@ -28,7 +28,7 @@ var ProofUtils = /** @class */ (function () {
         var buffers = [];
         for (var _i = 0, points_2 = points; _i < points_2.length; _i++) {
             var point = points_2[_i];
-            var buff = point.serialize();
+            var buff = point.serialize(false);
             buffers.push(buff);
         }
         var hashed = this.keccak256(buffer_1.Buffer.concat(buffers));

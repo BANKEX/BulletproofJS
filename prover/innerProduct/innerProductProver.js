@@ -13,13 +13,13 @@ var InnerProductProver = /** @class */ (function () {
         if (!((n & (n - 1)) == 0)) {
             utils_1.assert(false, "n is not a power of 2");
         }
-        var nBI = bigInteger_1.toBI(n, 10);
-        var nPopulation = 0;
-        for (var i = 0; i < nBI.bitLength(); i++) {
-            if (nBI.testn(i)) {
-                nPopulation++;
-            }
-        }
+        // const nBI = toBI(n, 10)
+        // let nPopulation = 0;
+        // for (let i = 0; i < (nBI.bitLength() as number); i++) {
+        //     if (nBI.testn(i)) {
+        //         nPopulation++
+        //     }
+        // }
         var emptyLS = [];
         var emptyRS = [];
         return this.generateProof(base, c, witness.getA(), witness.getB(), emptyLS, emptyRS);
@@ -61,21 +61,13 @@ var InnerProductProver = /** @class */ (function () {
             xs.push(x);
             xInverses.push(xInv);
         }
-        var gPrime = gLeft.haddamard(xInverses).addVector(gRight.haddamard(xs));
-        var hPrime = hLeft.haddamard(xs).addVector(hRight.haddamard(xInverses));
+        var gPrime = gLeft.hadamard(xInverses).addVector(gRight.hadamard(xs));
+        var hPrime = hLeft.hadamard(xs).addVector(hRight.hadamard(xInverses));
         var aPrime = asLeft.times(x).addVector(asRight.times(xInv));
         var bPrime = bsLeft.times(xInv).addVector(bsRight.times(x));
-        // System.out.println("P " + P.stringRepresentation());
-        // System.out.println("PAlt "+gs.commit(as).add(hs.commit(bs)).add(u.multiply(as.innerPoduct(bs))).stringRepresentation());
+        // console.log(aPrime.getVector()[0].toString(16))
         var PPrime = L.mul(xSquare).add(R.mul(xInvSquare)).add(P);
         var basePrime = new vectorBase_1.VectorBase(gPrime, hPrime, u);
-        // System.out.println("c "+ aPrime.innerPoduct(bPrime).mod(q));
-        // System.out.println("calt "+asLeft.innerPoduct(bsRight).multiply(xSquare).add(asRight.innerPoduct(bsLeft).multiply(xInvSquare)).add(as.innerPoduct(bs)).mod(q));
-        // System.out.println("X " + x);
-        // System.out.println("Xinv " + xInv);
-        // System.out.println("C " +PPrime.stringRepresentation());
-        //System.out.println("C alt" + pPrimeAlt);
-        //System.out.println(PPrime.equals(pPrimeAlt));
         return this.generateProof(basePrime, PPrime, aPrime, bPrime, ls, rs);
     };
     return InnerProductProver;

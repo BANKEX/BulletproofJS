@@ -27,13 +27,10 @@ export class InnerProductProofSystem{
         const hPoints = [] as ECPoint[]
         for (let i = 0; i < size; i++) {
             const gString = "G"+i
-            console.log(gString);
             const gHash = group.hash(Buffer.from(gString, "utf8"))
-            console.log(gHash.toString('hex'))
             const g = group.hashInto(gHash)
             gPoints.push(g)
             let hString = "H"+i
-            console.log(hString);
             const hHash = group.hash(Buffer.from(hString, "utf8"))
             const h = group.hashInto(hHash)
             hPoints.push(h)

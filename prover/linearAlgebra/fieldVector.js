@@ -1,10 +1,9 @@
 "use strict";
 exports.__esModule = true;
 var bigInteger_1 = require("../bigInteger/bigInteger");
+var utils_1 = require("../elliptic/lib/elliptic/utils");
 var FieldVector = /** @class */ (function () {
-    // private red: any
     function FieldVector(a, q) {
-        // this.red = BNCLASS.mont(q);
         // this.a = a.map((el) => {
         //     return el.toRed(this.red);
         // });
@@ -12,17 +11,17 @@ var FieldVector = /** @class */ (function () {
         this.q = q;
     }
     FieldVector.prototype.innerPoduct = function (other) {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
-        var res = bigInteger_1.toBI(0, 10);
-        for (var i = 0; i < this.a.length; i++) {
-            res = res.add(other.a[i].mul(this.a[i]));
-        }
+        utils_1.assert(other.a.length === this.a.length);
+        utils_1.assert(this.q.cmp(other.q) === 0);
+        var accumulator = bigInteger_1.toBI(0, 10);
+        var res = this.a.reduce(function (prev, next, index) {
+            return prev.add(next.mul(other.a[index]));
+        }, accumulator);
         return res.mod(this.q);
     };
     FieldVector.prototype.hadamard = function (other) {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
+        utils_1.assert(other.a.length === this.a.length);
+        utils_1.assert(this.q.cmp(other.q) === 0);
         var res = [];
         for (var i = 0; i < this.a.length; i++) {
             res.push(other.a[i].mul(this.a[i]).mod(this.q));
@@ -37,8 +36,8 @@ var FieldVector = /** @class */ (function () {
         return new FieldVector(res, this.q);
     };
     FieldVector.prototype.addVector = function (other) {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
+        utils_1.assert(other.a.length === this.a.length);
+        utils_1.assert(this.q.cmp(other.q) === 0);
         var res = [];
         for (var i = 0; i < this.a.length; i++) {
             res.push(other.a[i].add(this.a[i]).mod(this.q));
@@ -53,8 +52,8 @@ var FieldVector = /** @class */ (function () {
         return new FieldVector(res, this.q);
     };
     FieldVector.prototype.subtractVector = function (other) {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
+        utils_1.assert(other.a.length === this.a.length);
+        utils_1.assert(this.q.cmp(other.q) === 0);
         var res = [];
         for (var i = 0; i < this.a.length; i++) {
             res.push(other.a[i].sub(this.a[i]).mod(this.q));
@@ -85,7 +84,10 @@ var FieldVector = /** @class */ (function () {
         return this.a.length;
     };
     FieldVector.prototype.subVector = function (start, end) {
-        var res = this.a.slice(start, end);
+        var res = [];
+        for (var i = start; i < end; i++) {
+            res.push(this.a[i]);
+        }
         return new FieldVector(res, this.q);
     };
     FieldVector.prototype.getVector = function () {

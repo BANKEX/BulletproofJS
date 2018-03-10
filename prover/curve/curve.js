@@ -104,8 +104,13 @@ var ECPoint = /** @class */ (function () {
     ECPoint.prototype.getY = function () {
         return this.pointRef.getY();
     };
-    ECPoint.prototype.serialize = function () {
-        return buffer_1.Buffer.concat([this.getX().toArrayLike(buffer_1.Buffer, "be", 32), this.getY().toArrayLike(buffer_1.Buffer, "be", 32)]);
+    ECPoint.prototype.serialize = function (pad) {
+        if (pad) {
+            return buffer_1.Buffer.concat([this.getX().toArrayLike(buffer_1.Buffer, "be", 32), this.getY().toArrayLike(buffer_1.Buffer, "be", 32)]);
+        }
+        else {
+            return buffer_1.Buffer.concat([this.getX().toArrayLike(buffer_1.Buffer, "be"), this.getY().toArrayLike(buffer_1.Buffer, "be")]);
+        }
     };
     ECPoint.prototype.equals = function (other) {
         return this.getX().cmp(other.getX()) == 0 && this.getY().cmp(other.getY()) == 0;

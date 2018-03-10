@@ -6,6 +6,7 @@ const {FieldVector} = require("../prover/linearAlgebra/fieldVector")
 const {InnerProductWitness} = require("../prover/innerProduct/innerProductWitness")
 const {EfficientInnerProductVerifier} = require("../prover/innerProduct/efficientInnerProductVerifier")
 const ethUtil = require("ethereumjs-util");
+const assert = require("assert");
 
 function testCompletness()  {
     const curve = new ECCurve("bn256");
@@ -15,27 +16,39 @@ function testCompletness()  {
     const parameters = system.generatePublicParams(systemSize, curve);
     const verifier = system.getVerifier();
     const random = 12345
-    let as = []
-    let bs = []
+    let As = []
+    let Bs = []
     for (let i = 0; i < 16; i++) {
-        let r1 = new BN(secureRandom(2).toString("hex"), 16).mod(curve.order).mod(new BN(systemSize-1, 10))
-        let r2 = new BN(secureRandom(2).toString("hex"), 16).mod(curve.order).mod(new BN(systemSize-1, 10))
-        as.push(r1)
-        bs.push(r2)
+        // let r1 = new BN(i, 10).mod(curve.order).mod(new BN(systemSize, 10))
+        // let r2 = new BN(i, 10).mod(curve.order).mod(new BN(systemSize, 10))
+        let r1 = new BN(secureRandom(2).toString("hex"), 16).mod(curve.order).mod(new BN(systemSize, 10))
+        let r2 = new BN(secureRandom(2).toString("hex"), 16).mod(curve.order).mod(new BN(systemSize, 10))
+        As.push(r1)
+        Bs.push(r2)
     }
-    as = new FieldVector(as, curve.order)
-    bs = new FieldVector(bs, curve.order)
-    const c = as.innerPoduct(bs);
-    const vTot = parameters.commitToTwoVectors(as, bs, c);
-    console.log(vTot.serialize().toString("hex"))
-    const witness = new InnerProductWitness(as, bs);
+    const As_field = new FieldVector(As, curve.order)
+    const Bs_field = new FieldVector(Bs, curve.order)
+    const c = As_field.innerPoduct(Bs_field);
+    const vTot = parameters.commitToTwoVectors(As_field.getVector(), Bs_field.getVector(), As_field.innerPoduct(Bs_field));
+    // console.log(vTot.getX().toString(16));
+    const witness = new InnerProductWitness(As_field, Bs_field);
     const prover = system.getProver();
-    console.log(as);
-    console.log(bs);
-    console.log(c);
+    // console.log(c.toString(10));
     const proof = prover.generateProofFromWitness(parameters, vTot, witness);
+    assert(proof.getL().length === logSystemSize);
+    // const L = proof.getL();
+    // L.map((v) => {
+    //     console.log("c = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
+    // })
+    // const R = proof.getR();
+    // R.map((v) => {
+    //     console.log("c = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
+    // })
+    // console.log(proof.getA().toString(10));
+    // console.log(proof.getB().toString(10));
     const result = verifier.verify(parameters, vTot, proof);
-    console.log(result)
+    assert(result, "Inner product proof should have matched");
+    console.log("Efficient inner product verifier test passed")
 }
 
 function testBN256() {
@@ -44,25 +57,17 @@ function testBN256() {
     const system = new InnerProductProofSystem();
     const group = new ECCurve("bn256");
     const base = system.generatePublicParams(256, group);
+    console.log("Gs")
     base.getGs().getVector().map((v) => {
         console.log("[0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
     })
+    console.log("Hs")
     base.getHs().getVector().map((v) => {
         console.log("[0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
     })
-    // const firstByte = ethUtil.sha3("V")[0]
-    // const vHash = new BN(ethUtil.sha3("V"), 2, "be");
-    // const javaNum = new BN("213ed37d4cae01d0252d8962f6ab0859f781aebc5a33886759d44788f93c735a", 16)
-    // const prime = new BN("30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47", 16)
     console.log("H = 0x" + base.getH().getX().toString(16) + ", 0x" + base.getH().getY().toString(16) + "]")
     const as = FieldVector.pow(TWO, 256, group.order);
-    // as.getVector().map((v) => {
-    //     console.log("["+v.toString(10)+"]")
-    // })
     const bs = FieldVector.pow(ONE, 256, group.order);
-    // bs.getVector().map((v) => {
-    //     console.log("["+v.toString(10)+"]")
-    // })
     const witness = new InnerProductWitness(as, bs);
     const innerProduct = as.innerPoduct(bs)
     console.log("Inner product = " + innerProduct.toString(16))
@@ -85,8 +90,9 @@ function testBN256() {
     })
     console.log(productProof.getA().toString(16));
     console.log(productProof.getB().toString(16));
+    console.log("Proof system generated successfully")
     // System.out.println(pe.normalize());
     // System.out.println(pe.normalize().negate());
 }
-testBN256();
-// testCompletness();
+// testBN256();
+testCompletness();

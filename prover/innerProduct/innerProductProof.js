@@ -22,8 +22,8 @@ var InnerProductProof = /** @class */ (function () {
         return this.b;
     };
     InnerProductProof.prototype.serialize = function () {
-        var L_ser = buffer_1.Buffer.concat(this.L.map(function (el) { return el.serialize(); }));
-        var R_ser = buffer_1.Buffer.concat(this.R.map(function (el) { return el.serialize(); }));
+        var L_ser = buffer_1.Buffer.concat(this.L.map(function (el) { return el.serialize(true); }));
+        var R_ser = buffer_1.Buffer.concat(this.R.map(function (el) { return el.serialize(true); }));
         var a_ser = this.a.toArrayLike(buffer_1.Buffer, "be", 32);
         var b_ser = this.b.toArrayLike(buffer_1.Buffer, "be", 32);
         return buffer_1.Buffer.concat([L_ser, R_ser, a_ser, b_ser]);

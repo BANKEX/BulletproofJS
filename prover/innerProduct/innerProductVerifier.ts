@@ -34,8 +34,8 @@ export class InnerProductVerifier {
                 xs.push(x)
                 xInverses.push(xInv)
             }
-            let gPrime = gLeft.haddamard(xInverses).addVector(gRight.haddamard(xs))
-            let hPrime = hLeft.haddamard(xs).addVector(hRight.haddamard(xInverses));
+            let gPrime = gLeft.hadamard(xInverses).addVector(gRight.hadamard(xs))
+            let hPrime = hLeft.hadamard(xs).addVector(hRight.hadamard(xInverses));
             if (n % 2 == 1) {
                 gPrime = gPrime.plus(gs[(n - 1)]);
                 hPrime = hPrime.plus(hs[(n - 1)]);

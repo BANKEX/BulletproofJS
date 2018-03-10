@@ -33,18 +33,51 @@ var EfficientInnerProductVerifier = /** @class */ (function () {
         challenges = challenges.reverse();
         var bitSet = bigInteger_1.toBI(0, 10);
         var n_t = bigInteger_1.toBI(n, 10);
-        for (var i = 0; i < n / 2; ++i) {
+        for (var i = 0; i < n / 2; i++) {
             var i_t = bigInteger_1.toBI(i, 10);
-            for (var j = 0; i_t.bincn(j).cmp(n_t) == -1; ++j) {
-                var i1 = bigInteger_1.toBI(i, 10).bincn(j).toNumber();
+            var j = 0;
+            do {
+                var shifted = ONE.shln(j);
+                if (i_t.add(shifted).cmp(n_t) !== -1) {
+                    break;
+                }
+                var i1 = bigInteger_1.toBI(i, 10).add(shifted).toNumber();
                 if (bitSet.testn(i1)) {
                 }
                 else {
                     otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).mod(q);
-                    bitSet.setn(i1);
+                    bitSet = bitSet.bincn(i1);
                 }
-            }
+                j++;
+            } while (true);
         }
+        // do {
+        //     i++
+        // } while (i < n / 2)
+        // var n_t = bigInteger_1.toBI(n, 10);
+        // var i = 0;
+        // do {
+        //     console.log("i ="+i);
+        //     var i_t = bigInteger_1.toBI(i, 10);
+        //     var j=0;
+        //     do {
+        //         var shifted = ONE.shln(j);
+        //         if (i_t.add(shifted).cmp(n_t) !== -1) {
+        //             break;
+        //         }
+        //         var i1 = bigInteger_1.toBI(i, 10).add(shifted).toNumber();
+        //         if (bitSet.testn(i1)) {
+        //         }
+        //         else {
+        //             otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).mod(q);
+        //             bitSet = bitSet.bincn(i1);
+        //         }
+        //         j++;
+        //     } while (
+        //         true
+        //     )
+        //     i++
+        // } while (i < n / 2)
         var challengeVector = [];
         for (var i = 0; i < otherExponents.length; i++) {
             challengeVector.push(otherExponents[i]);

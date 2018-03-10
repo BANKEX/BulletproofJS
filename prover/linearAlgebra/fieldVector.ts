@@ -1,14 +1,12 @@
 import {BigInteger, toBI, BNCLASS} from "../bigInteger/bigInteger";
 import {ECPoint} from "../curve/curve";
+import { assert } from "../elliptic/lib/elliptic/utils";
 
 export class FieldVector {
     private a: BigInteger[]
     private q: BigInteger
-    // private red: any
 
     constructor (a: BigInteger[], q: BigInteger) {
-
-        // this.red = BNCLASS.mont(q);
         // this.a = a.map((el) => {
         //     return el.toRed(this.red);
         // });
@@ -17,18 +15,18 @@ export class FieldVector {
     }
 
     innerPoduct(other: FieldVector): BigInteger {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
-        let res = toBI(0, 10);
-        for (let i = 0; i < this.a.length; i++) {
-            res = res.add(other.a[i].mul(this.a[i]))
-        }
+        assert(other.a.length === this.a.length);
+        assert(this.q.cmp(other.q) === 0);
+        let accumulator = toBI(0, 10);
+        const res = this.a.reduce((prev: BigInteger, next: BigInteger, index: number) : BigInteger => {
+            return prev.add(next.mul(other.a[index]))
+        }, accumulator)
         return res.mod(this.q);
     }
 
     hadamard(other: FieldVector) {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
+        assert(other.a.length === this.a.length);
+        assert(this.q.cmp(other.q) === 0);
         let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(other.a[i].mul(this.a[i]).mod(this.q));
@@ -45,8 +43,8 @@ export class FieldVector {
     }
 
     addVector(other: FieldVector): FieldVector {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
+        assert(other.a.length === this.a.length);
+        assert(this.q.cmp(other.q) === 0);
         let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(other.a[i].add(this.a[i]).mod(this.q));
@@ -63,8 +61,8 @@ export class FieldVector {
     }
 
     subtractVector(other: FieldVector): FieldVector {
-        // assert(other.a.length === this.a.length);
-        // assert(this.q === other.q);
+        assert(other.a.length === this.a.length);
+        assert(this.q.cmp(other.q) === 0);
         let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
             res.push(other.a[i].sub(this.a[i]).mod(this.q));
@@ -92,16 +90,19 @@ export class FieldVector {
         return this.a[0];
     }
 
-    get(i: number) {
+    get(i: number): BigInteger {
         return this.a[i];
     }
 
-    size() {
+    size(): number {
         return this.a.length;
     }
 
     subVector(start: number, end: number) : FieldVector {
-        const res = this.a.slice(start, end) as BigInteger[];
+        const res = [] as BigInteger[];
+        for (let i = start; i < end; i++) {
+            res.push(this.a[i]);
+        }
         return new FieldVector(res, this.q);
     }
 

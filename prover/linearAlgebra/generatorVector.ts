@@ -21,25 +21,25 @@ export class GeneratorVector {
     }
 
     commit(exponents: BigInteger[]) : ECPoint {
-        assert(exponents.length === this.gs.length);
+        assert(exponents.length === this.gs.length, "Commitment base and vector should have the same length");
         let accumulator = this.curve.zero;
         const res = this.gs.reduce((prev:ECPoint , current: ECPoint, index: number) : ECPoint => {
             const newPoint = current.mul(exponents[index])
-            assert(!newPoint.isInfinity());
             return prev.add(newPoint);
         }, accumulator);
+        assert(!res.isInfinity(), "Commitment resulted in infinity point");
         return res;
     }
 
     commitToFieldVector(vec: FieldVector) : ECPoint {
         const exponents: BigInteger[] = vec.getVector();
-        assert(exponents.length === this.gs.length);
+        assert(exponents.length === this.gs.length, "Commitment base and vector should have the same length");
         let accumulator = this.curve.zero;
         const res = this.gs.reduce((prev:ECPoint , current: ECPoint, index: number) : ECPoint => {
             const newPoint = current.mul(exponents[index].umod(this.curve.order))
-            assert(!newPoint.isInfinity());
             return prev.add(newPoint);
         }, accumulator);
+        assert(!res.isInfinity(), "Commitment resulted in infinity point");
         return res;
     }
 
@@ -51,7 +51,7 @@ export class GeneratorVector {
         }, accumulator);
     }
 
-    haddamard(exponents: BigInteger[]) : GeneratorVector {
+    hadamard(exponents: BigInteger[]) : GeneratorVector {
         let newVector = this.gs.map((current: ECPoint, index: number) : ECPoint => {
             return current.mul(exponents[index]);
         }) as ECPoint[]

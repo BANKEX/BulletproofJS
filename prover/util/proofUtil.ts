@@ -12,7 +12,7 @@ export class ProofUtils {
     static computeChallenge = function(q: BigInteger, points:ECPoint[]) : BigInteger{
         let buffers = [] as Buffer[]
         for (const point of points) {
-            const buff = point.serialize()
+            const buff = point.serialize(false)
             buffers.push(buff)
         }
         const hashed = this.keccak256(Buffer.concat(buffers))
@@ -27,7 +27,7 @@ export class ProofUtils {
             buffers.push(buff)
         }
         for (const point of points) {
-            const buff = point.serialize()
+            const buff = point.serialize(false)
             buffers.push(buff)
         }
         const hashed = this.keccak256(Buffer.concat(buffers))

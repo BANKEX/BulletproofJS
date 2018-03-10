@@ -41,22 +41,29 @@ export class EfficientInnerProductVerifier {
             return prev.mul(current).mod(q)
         }, ONE).invm(q)
         challenges = challenges.reverse()
-        const bitSet = toBI(0, 10);
+        let bitSet = toBI(0, 10);
         const n_t = toBI(n, 10);
-        for (let i = 0; i < n/2; ++i) {
-            const i_t = toBI(i, 10)
-            for (let j = 0; i_t.bincn(j).cmp(n_t) == -1; ++j) {
-
-                const i1 = toBI(i, 10).bincn(j).toNumber()
-                if (bitSet.testn(i1)) {
-
-                } else {
-                    otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).mod(q);
-                    bitSet.setn(i1);
+        for (let i = 0; i < n/2; i++) {
+            var i_t = toBI(i, 10);
+            var j=0;
+            do {
+                var shifted = ONE.shln(j);
+                if (i_t.add(shifted).cmp(n_t) !== -1) {
+                    break;
                 }
-            }
+                var i1 = toBI(i, 10).add(shifted).toNumber();
+                if (bitSet.testn(i1)) {
+                
+                }
+                else {
+                    otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).mod(q);
+                    bitSet = bitSet.bincn(i1);
+                }
+                j++;
+            } while (
+                true
+            )
         }
-
         const challengeVector = [] as BigInteger[]
         for (let i = 0; i < otherExponents.length; i++ ) {
             challengeVector.push(otherExponents[i]);

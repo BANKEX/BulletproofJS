@@ -19,13 +19,10 @@ var InnerProductProofSystem = /** @class */ (function () {
         var hPoints = [];
         for (var i = 0; i < size; i++) {
             var gString = "G" + i;
-            console.log(gString);
             var gHash = group.hash(buffer_1.Buffer.from(gString, "utf8"));
-            console.log(gHash.toString('hex'));
             var g = group.hashInto(gHash);
             gPoints.push(g);
             var hString = "H" + i;
-            console.log(hString);
             var hHash = group.hash(buffer_1.Buffer.from(hString, "utf8"));
             var h = group.hashInto(hHash);
             hPoints.push(h);

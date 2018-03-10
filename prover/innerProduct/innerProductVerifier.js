@@ -28,8 +28,8 @@ var InnerProductVerifier = /** @class */ (function () {
                 xs.push(x);
                 xInverses.push(xInv);
             }
-            var gPrime = gLeft.haddamard(xInverses).addVector(gRight.haddamard(xs));
-            var hPrime = hLeft.haddamard(xs).addVector(hRight.haddamard(xInverses));
+            var gPrime = gLeft.hadamard(xInverses).addVector(gRight.hadamard(xs));
+            var hPrime = hLeft.hadamard(xs).addVector(hRight.hadamard(xInverses));
             if (n % 2 == 1) {
                 gPrime = gPrime.plus(gs[(n - 1)]);
                 hPrime = hPrime.plus(hs[(n - 1)]);

@@ -35,8 +35,8 @@ export class InnerProductProof {
     }
 
     public serialize(): Buffer {
-        const L_ser = Buffer.concat(this.L.map((el) => el.serialize()))
-        const R_ser = Buffer.concat(this.R.map((el) => el.serialize()))
+        const L_ser = Buffer.concat(this.L.map((el) => el.serialize(true)))
+        const R_ser = Buffer.concat(this.R.map((el) => el.serialize(true)))
         const a_ser = this.a.toArrayLike(Buffer, "be", 32)
         const b_ser = this.b.toArrayLike(Buffer, "be", 32)
         return Buffer.concat([L_ser, R_ser, a_ser, b_ser])

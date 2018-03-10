@@ -143,8 +143,12 @@ export class ECPoint {
         return this.pointRef.getY();
     }
 
-    serialize(): Buffer {
+    serialize(pad:Boolean): Buffer {
+        if (pad) {
         return Buffer.concat([this.getX().toArrayLike(Buffer, "be", 32), this.getY().toArrayLike(Buffer, "be", 32)])
+        } else {
+            return Buffer.concat([this.getX().toArrayLike(Buffer, "be"), this.getY().toArrayLike(Buffer, "be")])
+        }
     }
 
     equals(other: ECPoint): Boolean {
