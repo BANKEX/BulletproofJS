@@ -2,6 +2,7 @@
 exports.__esModule = true;
 var bigInteger_1 = require("../bigInteger/bigInteger");
 var utils_1 = require("../elliptic/lib/elliptic/utils");
+var proofUtil_1 = require("../util/proofUtil");
 var FieldVector = /** @class */ (function () {
     function FieldVector(a, q) {
         // this.a = a.map((el) => {
@@ -47,7 +48,7 @@ var FieldVector = /** @class */ (function () {
     FieldVector.prototype.addScalar = function (scalar) {
         var res = [];
         for (var i = 0; i < this.a.length; i++) {
-            res.push(scalar.add(this.a[i]).mod(this.q));
+            res.push(scalar.add(this.a[i]).umod(this.q));
         }
         return new FieldVector(res, this.q);
     };
@@ -56,14 +57,16 @@ var FieldVector = /** @class */ (function () {
         utils_1.assert(this.q.cmp(other.q) === 0);
         var res = [];
         for (var i = 0; i < this.a.length; i++) {
-            res.push(other.a[i].sub(this.a[i]).mod(this.q));
+            var el = this.a[i].sub(other.a[i]).umod(this.q);
+            res.push(el);
         }
         return new FieldVector(res, this.q);
     };
     FieldVector.prototype.sum = function () {
         var accumulator = bigInteger_1.toBI(0, 10);
         for (var i = 0; i < this.a.length; i++) {
-            accumulator.add(this.a[i]);
+            // accumulator = accumulator.add(this.a[i]).umod(this.q);
+            accumulator.iadd(this.a[i]);
         }
         return accumulator;
     };
@@ -103,6 +106,13 @@ var FieldVector = /** @class */ (function () {
         }
         return new FieldVector(res, q);
     };
+    FieldVector.fill = function (k, n, q) {
+        var res = [];
+        for (var i = 0; i < n; i++) {
+            res.push(k);
+        }
+        return new FieldVector(res, q);
+    };
     FieldVector.prototype.equals = function (other) {
         if (this == other)
             return true;
@@ -117,6 +127,13 @@ var FieldVector = /** @class */ (function () {
             }
         }
         return true;
+    };
+    FieldVector.random = function (n, q) {
+        var res = [];
+        for (var i = 0; i < n; i++) {
+            res.push(proofUtil_1.ProofUtils.randomNumber());
+        }
+        return new FieldVector(res, q);
     };
     return FieldVector;
 }());

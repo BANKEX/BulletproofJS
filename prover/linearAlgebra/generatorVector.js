@@ -86,6 +86,9 @@ var GeneratorVector = /** @class */ (function () {
         newArray.push(other);
         return this.from(newArray);
     };
+    GeneratorVector.prototype.getGroup = function () {
+        return this.curve;
+    };
     GeneratorVector.prototype.getCurve = function () {
         return this.curve;
     };

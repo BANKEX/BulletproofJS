@@ -1,6 +1,7 @@
 import {BigInteger, toBI, BNCLASS} from "../bigInteger/bigInteger";
 import {ECPoint} from "../curve/curve";
 import { assert } from "../elliptic/lib/elliptic/utils";
+import { ProofUtils } from "../util/proofUtil";
 
 export class FieldVector {
     private a: BigInteger[]
@@ -55,7 +56,7 @@ export class FieldVector {
     addScalar(scalar: BigInteger): FieldVector {
         let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
-            res.push(scalar.add(this.a[i]).mod(this.q));
+            res.push(scalar.add(this.a[i]).umod(this.q));
         }
         return new FieldVector(res, this.q);
     }
@@ -65,7 +66,8 @@ export class FieldVector {
         assert(this.q.cmp(other.q) === 0);
         let res = [] as BigInteger[];
         for (let i = 0; i < this.a.length; i++) {
-            res.push(other.a[i].sub(this.a[i]).mod(this.q));
+            const el = this.a[i].sub(other.a[i]).umod(this.q)
+            res.push(el);
         }
         return new FieldVector(res, this.q);
     }
@@ -73,7 +75,8 @@ export class FieldVector {
     sum(): BigInteger {
         let accumulator = toBI(0, 10);
         for (let i = 0; i < this.a.length; i++) {
-            accumulator.add(this.a[i]);
+            // accumulator = accumulator.add(this.a[i]).umod(this.q);
+            accumulator.iadd(this.a[i]);
         }
         return accumulator;
     }
@@ -122,6 +125,14 @@ export class FieldVector {
         return new FieldVector(res, q);
     }
 
+    static fill(k: BigInteger, n: number, q: BigInteger) : FieldVector {
+        let res = [] as BigInteger[];
+        for (let i = 0; i < n; i++) {
+            res.push(k);
+        }
+        return new FieldVector(res, q);
+    }
+
     equals(other: FieldVector) {
         if (this == other) return true;
         if (other == null) return false;
@@ -134,5 +145,13 @@ export class FieldVector {
             }
         }
         return true;
+    }
+
+    public static random(n: number, q: BigInteger): FieldVector  {
+        const res = [];
+        for (let i = 0; i < n; i++) {
+            res.push(ProofUtils.randomNumber());
+        }
+        return new FieldVector(res, q);
     }
 }

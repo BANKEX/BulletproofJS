@@ -2,8 +2,6 @@ import {GeneratorVector} from "./generatorVector"
 import { ECPoint } from "../curve/curve";
 import { BigInteger} from "../bigInteger/bigInteger";
 
-
-
 export class VectorBase{
     private gs:GeneratorVector;
     private hs:GeneratorVector;

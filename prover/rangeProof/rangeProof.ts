@@ -1,6 +1,23 @@
-class RangeProof {
+import {BigInteger, toBI} from "../bigInteger/bigInteger";
+import {ECPoint} from "../curve/curve";
+import {Buffer} from "buffer"
+import {GeneratorVector} from "../linearAlgebra/generatorVector";
+import {InnerProductProof} from "../innerProduct/innerProductProof";
 
-    constructor(aI, s, tCommits, tauX, mu, t, productProof) {
+const emptyBuffer = Buffer.alloc(0);
+type Buffer = typeof emptyBuffer;
+
+
+export class RangeProof {
+    public aI: ECPoint;
+    public s: ECPoint;
+    public tCommits: GeneratorVector;
+    public tauX: BigInteger;
+    public mu: BigInteger;
+    public t: BigInteger;
+    public productProof: InnerProductProof;
+
+    constructor(aI: ECPoint, s: ECPoint, tCommits: GeneratorVector, tauX: BigInteger,mu: BigInteger, t: BigInteger, productProof: InnerProductProof) {
         this.aI = aI;
         this.s = s;
         this.tCommits = tCommits;
@@ -10,32 +27,32 @@ class RangeProof {
         this.productProof = productProof;
     }
 
-    getaI() {
+    public getaI():ECPoint {
         return this.aI;
     }
 
-    getS() {
+    public getS():ECPoint {
         return this.s;
     }
 
 
-    getTauX() {
+    public getTauX(): BigInteger  {
         return this.tauX;
     }
 
-    getMu() {
+    public getMu(): BigInteger {
         return this.mu;
     }
 
-    getT() {
+    public getT(): BigInteger {
         return this.t;
     }
 
-    getProductProof() {
+    public getProductProof(): InnerProductProof {
         return this.productProof;
     }
 
-    gettCommits() {
+    public gettCommits(): GeneratorVector {
         return this.tCommits;
     }
 
@@ -60,12 +77,11 @@ class RangeProof {
     //     }
     //     return fullArray;
     // }
-    numInts(){
+    public numInts(): number{
         return 5;
     }
-    numElements(){
-        return 2 + tCommits.size()+productProof.getL().size()+productProof.getR().size();
+    public numElements(): number{
+        return 2+ this.tCommits.getVector().length + this.productProof.getL().length + this.productProof.getR().length;
     }
 }
 
-module.exports = {RangeProof}

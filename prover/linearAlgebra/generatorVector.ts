@@ -74,7 +74,7 @@ export class GeneratorVector {
         return this.gs[i];
     }
 
-    size(): Number {
+    size(): number {
         return this.gs.length;
     }
     
@@ -103,6 +103,10 @@ export class GeneratorVector {
         }
         newArray.push(other)
         return this.from(newArray);
+    }
+
+    getGroup(): ECCurve {
+        return this.curve;
     }
 
     getCurve(): ECCurve {

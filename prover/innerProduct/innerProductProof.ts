@@ -41,19 +41,4 @@ export class InnerProductProof {
         const b_ser = this.b.toArrayLike(Buffer, "be", 32)
         return Buffer.concat([L_ser, R_ser, a_ser, b_ser])
     }
-
-    // @Override
-    // public byte[] serialize() {
-    //     List<byte[]> byteArrs = Stream.concat(L.stream(), R.stream()).map(GroupElement::canonicalRepresentation).collect(Collectors.toList());
-    //     byteArrs.add(a.toByteArray());
-    //     byteArrs.add(b.toByteArray());
-    //     int totalBytes = byteArrs.stream().mapToInt(arr -> arr.length).sum();
-    //     byte[] fullArray = new byte[totalBytes];
-    //     int currIndex = 0;
-    //     for (byte[] arr2 : byteArrs) {
-    //         System.arraycopy(arr2, 0, fullArray, currIndex, arr2.length);
-    //         currIndex += arr2.length;
-    //     }
-    //     return fullArray;
-    // }
 }

@@ -12,7 +12,7 @@ export class ProofUtils {
     static computeChallenge = function(q: BigInteger, points:ECPoint[]) : BigInteger{
         let buffers = [] as Buffer[]
         for (const point of points) {
-            const buff = point.serialize(false)
+            const buff = point.serialize(true)
             buffers.push(buff)
         }
         const hashed = this.keccak256(Buffer.concat(buffers))
@@ -23,16 +23,33 @@ export class ProofUtils {
     static computeChallengeForBigIntegersAndPoints(q:BigInteger, ints:BigInteger[], points:ECPoint[]) {
         let buffers = [] as Buffer[]
         for (const bi of ints) {
-            const buff = bi.toArrayLike(Buffer, "be") as Buffer
+            const buff = bi.toArrayLike(Buffer, "be", 32) as Buffer
             buffers.push(buff)
         }
         for (const point of points) {
-            const buff = point.serialize(false)
+            const buff = point.serialize(true)
             buffers.push(buff)
         }
         const hashed = this.keccak256(Buffer.concat(buffers))
         const bn = new BNCLASS(hashed, 16, "be").mod(q)
         return bn
+    }
+
+    static computeChallengeForBigIntegers(q:BigInteger, ints:BigInteger[]) {
+        let buffers = [] as Buffer[]
+        for (const bi of ints) {
+            const buff = bi.toArrayLike(Buffer, "be", 32) as Buffer
+            buffers.push(buff)
+        }
+        const hashed = this.keccak256(Buffer.concat(buffers))
+        const bn = new BNCLASS(hashed, 16, "be").mod(q)
+        return bn
+    }
+
+    static randomNumber(): BigInteger {
+        // return new BNCLASS(1);
+        let buff = SecureRandom(32);
+        return new BNCLASS(buff, 16, "be")
     }
 }
 

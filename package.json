@@ -14,5 +14,8 @@
     "ethereumjs-util": "^5.1.4",
     "secure-random": "^1.1.1",
     "web3": "^1.0.0-beta.30"
+  },
+  "devDependencies": {
+    "types-bn": "0.0.1"
   }
 }
