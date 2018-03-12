@@ -7,23 +7,22 @@ const {InnerProductWitness} = require("../prover/innerProduct/innerProductWitnes
 const {EfficientInnerProductVerifier} = require("../prover/innerProduct/efficientInnerProductVerifier")
 const ethUtil = require("ethereumjs-util");
 const assert = require("assert");
-const {RangeProofProver} = require("../prover/rangeProof/rangeProofProver")
-const {RangeProofVerifier} = require("../prover/rangeProof/rangeProofVerifier")
+const {MultiRangeProofProver} = require("../prover/multiRangeProof/multiRangeProofProver")
+const {MultiRangeProofVerifier} = require("../prover/multiRangeProof/multiRangeProofVerifier")
 const {GeneratorParams} = require("../prover/rangeProof/generatorParams")
 const {PeddersenCommitment} = require("../prover/commitments/peddersenCommitment")
+const {GeneratorVector} = require("../prover/linearAlgebra/generatorVector")
+const {ProofUtils} = require("../prover/util/proofUtil")
 
 function getValuesForDemo() {
     const group = new ECCurve("bn256")
     const total = new BN(10);
     const number = new BN(7);
     const change = new BN(3);
-    // BigInteger randomness = ProofUtils.randomNumber();
-    const randomness = new BN(123);
+
     const q = group.order;
     console.log("Group order = " + q.toString(10) + "\n");
-    console.log("Secret 1 = " + randomness.toString(10) + "\n");
-    console.log("Secret 2 = " + q.sub(randomness).toString(10) + "\n");
-    const parameters = GeneratorParams.generateParams(4, group);
+    const parameters = GeneratorParams.generateParams(16, group);
     // parameters.getVectorBase().getGs().getVector().map((v) => {
     //     console.log("gs = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
     // })
@@ -38,23 +37,15 @@ function getValuesForDemo() {
     // h.map((v) => {
     //     console.log("h = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
     // })
-    const v = parameters.getBase().commit(number, randomness);
-    // console.log("c = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
-    const v_change = parameters.getBase().commit(change, q.sub(randomness));
-    // console.log("c = [0x"+v_change.getX().toString(16) + ", 0x"+v_change.getY().toString(16) + "]")
-    const witness = new PeddersenCommitment(parameters.getBase(), number, randomness);
-    const witness_change = new PeddersenCommitment(parameters.getBase(), change, q.sub(randomness));
-    const prover = new RangeProofProver();
-    const proof = prover.generateProof(parameters, v, witness);
-    const proof_change = prover.generateProof(parameters, v_change, witness_change);
-    const verifier = new RangeProofVerifier();
-    console.log("For one proof size is: scalaras " + proof.numInts() + ", field elemnts " + proof.numElements());
-    console.log("Amount\n");
-    let valid = verifier.verify(parameters, v, proof);
-    console.log("Proof is " + valid + "\n");
-    console.log("Change\n");
-    valid = verifier.verify(parameters, v_change, proof_change);
-    console.log("Proof is " + valid + "\n");
+    const witness = new PeddersenCommitment(parameters.getBase(), number, ProofUtils.randomNumber());
+    const witness_change = new PeddersenCommitment(parameters.getBase(), change, ProofUtils.randomNumber());
+    const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
+    const prover = new MultiRangeProofProver();
+    const proof = prover.generateProof(parameters, commitments, [witness, witness_change]);
+    const verifier = new MultiRangeProofVerifier();
+    let valid = verifier.verify(parameters, commitments, proof);
+    console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elemnts " + proof.numElements());
+    console.log("Multi range proof is " + valid + "\n");
 }
 
 getValuesForDemo();
