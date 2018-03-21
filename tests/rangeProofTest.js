@@ -12,7 +12,7 @@ const {RangeProofVerifier} = require("../prover/rangeProof/rangeProofVerifier")
 const {GeneratorParams} = require("../prover/rangeProof/generatorParams")
 const {PeddersenCommitment} = require("../prover/commitments/peddersenCommitment")
 
-function getValuesForDemo() {
+function testSoundness() {
     const group = new ECCurve("bn256")
     const total = new BN(10);
     const number = new BN(7);
@@ -48,7 +48,7 @@ function getValuesForDemo() {
     const proof = prover.generateProof(parameters, v, witness);
     const proof_change = prover.generateProof(parameters, v_change, witness_change);
     const verifier = new RangeProofVerifier();
-    console.log("For one proof size is: scalaras " + proof.numInts() + ", field elemnts " + proof.numElements());
+    console.log("For one proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
     console.log("Amount\n");
     let valid = verifier.verify(parameters, v, proof);
     console.log("Proof is " + valid + "\n");
@@ -57,4 +57,4 @@ function getValuesForDemo() {
     console.log("Proof is " + valid + "\n");
 }
 
-getValuesForDemo();
+testSoundness();

@@ -4,7 +4,7 @@ export class RangeProofWitness {
     public number: BigInteger;
 
     public randomness: BigInteger;
-    public RangeProofWitness(number: BigInteger , randomness: BigInteger ) {
+    constructor(number: BigInteger , randomness: BigInteger ) {
         this.number = number;
         this.randomness = randomness;
     }

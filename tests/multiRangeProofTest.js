@@ -14,7 +14,7 @@ const {PeddersenCommitment} = require("../prover/commitments/peddersenCommitment
 const {GeneratorVector} = require("../prover/linearAlgebra/generatorVector")
 const {ProofUtils} = require("../prover/util/proofUtil")
 
-function getValuesForDemo() {
+function testSoundness() {
     const group = new ECCurve("bn256")
     const total = new BN(10);
     const number = new BN(7);
@@ -44,8 +44,8 @@ function getValuesForDemo() {
     const proof = prover.generateProof(parameters, commitments, [witness, witness_change]);
     const verifier = new MultiRangeProofVerifier();
     let valid = verifier.verify(parameters, commitments, proof);
-    console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elemnts " + proof.numElements());
+    console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
     console.log("Multi range proof is " + valid + "\n");
 }
 
-getValuesForDemo();
+testSoundness();
