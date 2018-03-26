@@ -16,12 +16,6 @@ type Curve = typeof CURVE;
 type Point = typeof POINT;
 
 
-interface iECCurve {
-    order: BigInteger
-    halfOrder: BigInteger
-    primeFieldSize: BigInteger
-}
-
 export class ECCurve {
     public order: BigInteger
     public primeFieldSize: BigInteger
@@ -90,18 +84,6 @@ export class ECCurve {
     }
 
 }
-
-interface iECPoint {
-    x: BigInteger
-    y: BigInteger
-    curve: ECCurve
-    pointRef: Point
-    add(another: ECPoint) : ECPoint
-    mul(scalar: BigInteger) : ECPoint
-    negate() : ECPoint
-    inverse(): ECPoint
-}
-
 
 export class ECPoint {
     public curve: ECCurve

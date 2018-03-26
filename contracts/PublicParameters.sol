@@ -130,20 +130,20 @@ contract PublicParameters {
     //     return res;
     // }
 
-    function testToString(uint256 index) public view returns(bytes res) {
-        require(index < m);
-        return index.uintToBytes();
-    }
+    // function testToString(uint256 index) public view returns(bytes res) {
+    //     require(index < m);
+    //     return index.uintToBytes();
+    // }
 
-    function testHash(uint256 index) public view returns(uint256 res) {
-        require(index < m);
-        bytes32 h = keccak256("G", index.uintToBytes());
-        return uint256(h);
-    }
+    // function testHash(uint256 index) public view returns(uint256 res) {
+    //     require(index < m);
+    //     bytes32 h = keccak256("G", index.uintToBytes());
+    //     return uint256(h);
+    // }
 
-    function testHashAsBytes(uint256 index) public view returns(bytes32 res) {
-        require(index < m);
-        bytes32 h = keccak256("G", index.uintToBytes());
-        return h;
-    }
+    // function testHashAsBytes(uint256 index) public view returns(bytes32 res) {
+    //     require(index < m);
+    //     bytes32 h = keccak256("G", index.uintToBytes());
+    //     return h;
+    // }
 }

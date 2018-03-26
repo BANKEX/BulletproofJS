@@ -1,10 +1,10 @@
 "use strict";
 exports.__esModule = true;
 var SchnorrSignature = /** @class */ (function () {
-    function SchnorrSignature(s, e, group) {
+    function SchnorrSignature(s, e, generator) {
         this.s = s;
         this.e = e;
-        this.group = group;
+        this.generator = generator;
     }
     SchnorrSignature.prototype.getS = function () {
         return this.s;
@@ -12,8 +12,8 @@ var SchnorrSignature = /** @class */ (function () {
     SchnorrSignature.prototype.getE = function () {
         return this.e;
     };
-    SchnorrSignature.prototype.getGroup = function () {
-        return this.group;
+    SchnorrSignature.prototype.getGenerator = function () {
+        return this.generator;
     };
     return SchnorrSignature;
 }());

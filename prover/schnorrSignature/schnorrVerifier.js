@@ -8,7 +8,7 @@ var SchnorrVerifier = /** @class */ (function () {
     function SchnorrVerifier() {
     }
     SchnorrVerifier.prototype.verity = function (data, signature, publicKey) {
-        var g_S = signature.getGroup().generator.mul(signature.getS());
+        var g_S = signature.getGenerator().mul(signature.getS());
         var y_E = publicKey.mul(signature.getE());
         var r_V = g_S.add(y_E);
         var r_V_buffer = r_V.serialize(true);

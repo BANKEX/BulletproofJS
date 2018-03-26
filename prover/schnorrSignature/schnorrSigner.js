@@ -13,9 +13,9 @@ var SchnorrSigner = /** @class */ (function () {
         var xBuffer = X.serialize(true);
         var hash = ethereumjs_util_1.sha3(buffer_1.Buffer.concat([xBuffer, data]));
         var e = new bigInteger_1.BNCLASS(hash, 16, "be");
-        var x_E = witness.getPrivateKey().mul(e).umod(witness.getGroup().order);
-        var s = witness.getRandomness().sub(x_E).umod(witness.getGroup().order);
-        return new schnorrSignature_1.SchnorrSignature(s, e, witness.getGroup());
+        var x_E = witness.getPrivateKey().mul(e).umod(witness.getGenerator().curve.order);
+        var s = witness.getRandomness().sub(x_E).umod(witness.getGenerator().curve.order);
+        return new schnorrSignature_1.SchnorrSignature(s, e, witness.getGenerator());
     };
     return SchnorrSigner;
 }());

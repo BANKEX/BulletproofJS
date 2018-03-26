@@ -18,46 +18,46 @@ contract('PublicParameters', async (accounts) => {
         publicParams = await PublicParameters.new({from: operator})
     })
 
-    it('test hashing', async () => {
-        let i;
-        try {
-            for (i = 0; i < 256; i++) {
-                const res = await publicParams.testToString(i);
-                const buffer = ethUtil.toBuffer(res);
-                const string = buffer.toString("ascii");
-                const ref = i.toString();
-                if (string != ref) {
-                    console.log("String is " + string);
-                    console.log("Ref is " + ref);
-                    throw "Error";
-                }
-                assert(string == ref);
-            }
-        } catch(err) {
-            console.log("I = "+ i)
-            console.log(err);
-            throw "Failed"
-        }
-        const g0h = await publicParams.testHashAsBytes(0);
-        assert(ethUtil.sha3("G0").equals(ethUtil.toBuffer(g0h)));
-        try {
-            for (i = 0; i < 256; i++) {
-                const gString = "G"+i;
-                const gHash = ethUtil.sha3(Buffer.from(gString, "utf8"))
-                const gH = await publicParams.testHashAsBytes(i);
-                const hBuffer = ethUtil.toBuffer(gH);
-                if (!hBuffer.equals(gHash)) {
-                    console.log("Hashing error");
-                    console.log("I = " + i);
-                    throw "Error";
-                }
-                assert(hBuffer.equals(gHash));
-            }
-        } catch(err) {
-            console.log(err);
-            throw "Failed"
-        }
-    })
+    // it('test hashing', async () => {
+    //     let i;
+    //     try {
+    //         for (i = 0; i < 256; i++) {
+    //             const res = await publicParams.testToString(i);
+    //             const buffer = ethUtil.toBuffer(res);
+    //             const string = buffer.toString("ascii");
+    //             const ref = i.toString();
+    //             if (string != ref) {
+    //                 console.log("String is " + string);
+    //                 console.log("Ref is " + ref);
+    //                 throw "Error";
+    //             }
+    //             assert(string == ref);
+    //         }
+    //     } catch(err) {
+    //         console.log("I = "+ i)
+    //         console.log(err);
+    //         throw "Failed"
+    //     }
+    //     const g0h = await publicParams.testHashAsBytes(0);
+    //     assert(ethUtil.sha3("G0").equals(ethUtil.toBuffer(g0h)));
+    //     try {
+    //         for (i = 0; i < 256; i++) {
+    //             const gString = "G"+i;
+    //             const gHash = ethUtil.sha3(Buffer.from(gString, "utf8"))
+    //             const gH = await publicParams.testHashAsBytes(i);
+    //             const hBuffer = ethUtil.toBuffer(gH);
+    //             if (!hBuffer.equals(gHash)) {
+    //                 console.log("Hashing error");
+    //                 console.log("I = " + i);
+    //                 throw "Error";
+    //             }
+    //             assert(hBuffer.equals(gHash));
+    //         }
+    //     } catch(err) {
+    //         console.log(err);
+    //         throw "Failed"
+    //     }
+    // })
 
     it('do setup', async () => {
         const group = new ECCurve("bn256")
@@ -96,9 +96,6 @@ contract('PublicParameters', async (accounts) => {
         let vectorsRef = parameters.getVectorBase().getGs().getVector();
         for (let i = 0; i < 256; i++) {
             try{
-                // const p = await publicParams.getGVectorComponent(i);
-                // const x = p[0];
-                // const y = p[1];
                 const x = await publicParams.gVector(2*i)
                 const y = await publicParams.gVector(2*i + 1)
                 const v = vectorsRef[i];
@@ -136,34 +133,5 @@ contract('PublicParameters', async (accounts) => {
                 console.log(err)
             }
         }
-        
-        // parameters.getVectorBase().getGs().getVector().map((v) => {
-        //     console.log("gs = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
-        // })
-        // parameters.getVectorBase().getHs().getVector().map((v) => {
-        //     console.log("hs = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
-        // })
-        // const g = [parameters.getBase().g]
-        // g.map((v) => {
-        //     console.log("g = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
-        // })
-        // const h = [parameters.getBase().h]
-        // h.map((v) => {
-        //     console.log("h = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
-        // })
-        // let lastBlockNumber = await storage.lastBlockNumber()
-        // assert(lastBlockNumber.toString() == "0");
-        // const submissionReceipt = await plasma.submitBlockHeaders(blockOne);
-        // lastBlockNumber = await storage.lastBlockNumber();
-        // assert(lastBlockNumber.toString() == "1");
-        // // web3.evm.mine()
-        // let allEvents = storage.allEvents({fromBlock: submissionReceipt.receipt.blockNumber, toBlock: submissionReceipt.receipt.blockNumber});
-        // let get = util.promisify(allEvents.get.bind(allEvents))
-        // let evs = await get()
-        // assert.web3Event({logs: evs}, {
-        //     event: 'BlockHeaderSubmitted',
-        //     args: {_blockNumber: 1,
-        //          _merkleRoot: "0xdf8a6ee70de2e83987ac7aaba2a92e0161a799706944e123da2babb8c9dc659d"}
-        // }, 'The event is emitted');
     })
 })

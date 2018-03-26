@@ -4,11 +4,11 @@ import { ECCurve, ECPoint } from "../curve/curve";
 export class SchnorrSignature {
     public s: BigInteger;
     public e: BigInteger;
-    public group: ECCurve;
-    constructor(s: BigInteger , e: BigInteger, group: ECCurve ) {
+    public generator: ECPoint;
+    constructor(s: BigInteger , e: BigInteger, generator: ECPoint) {
         this.s = s;
         this.e = e;
-        this.group = group;
+        this.generator = generator;
     }
 
     public getS(): BigInteger  {
@@ -19,7 +19,7 @@ export class SchnorrSignature {
         return this.e;
     }
 
-    public getGroup(): ECCurve  {
-        return this.group;
+    public getGenerator(): ECPoint {
+        return this.generator;
     }
 }

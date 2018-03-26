@@ -1,4 +1,4 @@
-const {ECCurve} = require("../prover/curve/curve")
+const {ECCurve, ECPoint} = require("../prover/curve/curve")
 const secureRandom = require("secure-random")
 const BN = require("bn.js")
 const ethUtil = require("ethereumjs-util");
@@ -9,7 +9,8 @@ const {SchnorrWitness} = require("../prover/schnorrSignature/schnorrWitness")
 function testSoundness() {
     const group = new ECCurve("bn256")
     const data = secureRandom(128, {type: 'Buffer'});
-    const witness = SchnorrWitness.newKey(group)
+    const signatureGenerator = group.generator;
+    const witness = SchnorrWitness.newKey(signatureGenerator)
     const system = new SchnorrSystem()
     const signer = system.getSigner()
     const verifier = system.getVerifier()

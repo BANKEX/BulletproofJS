@@ -4,12 +4,12 @@ import { ProofUtils } from "../util/proofUtil";
 
 export class SchnorrWitness {
     public privateKey: BigInteger;
-    public randomness: BigInteger
-    public group: ECCurve
-    constructor(privateKey: BigInteger , randomness: BigInteger, group: ECCurve ) {
+    public randomness: BigInteger;
+    public generator: ECPoint;
+    constructor(privateKey: BigInteger , randomness: BigInteger, generator: ECPoint ) {
         this.privateKey = privateKey;
         this.randomness = randomness;
-        this.group = group;
+        this.generator = generator;
     }
 
     public getPrivateKey(): BigInteger  {
@@ -20,28 +20,28 @@ export class SchnorrWitness {
         return this.randomness;
     }
 
-    public getGroup(): ECCurve  {
-        return this.group;
+    public getGenerator(): ECPoint  {
+        return this.generator;
     }
 
-    public static newKey(group: ECCurve) : SchnorrWitness {
+    public static newKey(generator: ECPoint) : SchnorrWitness {
         let key = ProofUtils.randomNumber()
-        while (key.cmp(group.order) >= 0) {
+        while (key.cmp(generator.curve.order) >= 0) {
             key = ProofUtils.randomNumber()
         }
         let rand = ProofUtils.randomNumber()
-        while (rand.cmp(group.order) >= 0) {
+        while (rand.cmp(generator.curve.order) >= 0) {
             rand = ProofUtils.randomNumber()
         }
 
-        return new SchnorrWitness(key, rand, group)
+        return new SchnorrWitness(key, rand, generator)
     }
 
     public getR() : ECPoint {
-        return this.group.generator.mul(this.randomness)
+        return this.generator.mul(this.randomness)
     }
 
     public getPublicKey(): ECPoint {
-        return this.group.generator.mul(this.privateKey)
+        return this.generator.mul(this.privateKey)
     }
 }
