@@ -11,6 +11,12 @@ var PeddersenBase = /** @class */ (function () {
     PeddersenBase.prototype.commit = function (x, r) {
         return this.g.mul(x).add(this.h.mul(r));
     };
+    PeddersenBase.prototype.getG = function () {
+        return this.g;
+    };
+    PeddersenBase.prototype.getH = function () {
+        return this.h;
+    };
     return PeddersenBase;
 }());
 exports.PeddersenBase = PeddersenBase;

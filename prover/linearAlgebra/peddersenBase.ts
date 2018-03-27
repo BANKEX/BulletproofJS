@@ -12,11 +12,18 @@ export class PeddersenBase {
         this.generator = generator;
         this.g = g;
         this.h = h;
-
     }
 
     public commit(x: BigInteger, r: BigInteger ) : ECPoint {
         return this.g.mul(x).add(this.h.mul(r));
+    }
+
+    public getG() : ECPoint {
+        return this.g;
+    }
+
+    public getH() : ECPoint {
+        return this.h;
     }
 
 }
