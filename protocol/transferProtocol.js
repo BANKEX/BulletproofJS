@@ -15,15 +15,17 @@ const {GeneratorVector} = require("../prover/linearAlgebra/generatorVector")
 const {ProofUtils} = require("../prover/util/proofUtil")
 const {SchnorrSystem} = require("../prover/schnorrSignature/schnorrSystem")
 const {SchnorrWitness} = require("../prover/schnorrSignature/schnorrWitness")
+const aesjs = require('aes-js');
+const {ECDHWitness} = require("../prover/ecdh/ecdhWitness");
+const {ECDHProtocol} = require("../prover/ecdh/ecdhProtocol");
 
 function transferProtocol() {
     const group = new ECCurve("bn256")
-    const data = secureRandom(128, {type: 'Buffer'});
     const signatureGenerator = group.generator;
     const Alice = SchnorrWitness.newKey(signatureGenerator)
     const Bob = SchnorrWitness.newKey(signatureGenerator)
     const q = group.order;
-    const parameters = GeneratorParams.generateParams(256, group);
+    const parameters = GeneratorParams.generateParams(64, group);
 
     const AliceEphemeral = Alice;
     const BobEphemeral = Bob; //for now
@@ -52,14 +54,44 @@ function transferProtocol() {
     const result = verifier.verity(publicKey.serialize(true), signature, publicKey)
     assert(result, "Failed to provide a proof of sum to zero");
     console.log("Proved sum to zero");
-    // const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
-    // const prover = new MultiRangeProofProver();
-    // const proof = prover.generateProof(parameters, commitments, [witness, witness_change]);
-    // const verifier = new MultiRangeProofVerifier();
-    // let valid = verifier.verify(parameters, commitments, proof);
-    // console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
-    // console.log("Multi range proof is " + valid + "\n");
-    
+
+    const ecdhWitnessAlice = new ECDHWitness(AliceEphemeral.getPrivateKey(), AliceEphemeral.getGenerator())
+    const ecdhWitnessBob = new ECDHWitness(BobEphemeral.getPrivateKey(), BobEphemeral.getGenerator())
+
+    const agreedKey = ECDHProtocol.getAgreedKey(ecdhWitnessAlice, ecdhWitnessBob.getKey());
+    const agreedKey2 = ECDHProtocol.getAgreedKey(ecdhWitnessBob, ecdhWitnessAlice.getKey());
+
+    assert(agreedKey.cmp(agreedKey2) === 0, "ECDH failed");
+    console.log("ECDH has completed");
+
+    const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
+    const prover = new MultiRangeProofProver();
+    const proof = prover.generateProof(parameters, commitments, [witness, witness_change]);
+    const rangeProofVerifier = new MultiRangeProofVerifier();
+    let valid = rangeProofVerifier.verify(parameters, commitments, proof);
+    assert(valid, "Range proof is not valid");
+    console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
+
+    const key = agreedKey.toArrayLike(Buffer, "be", 32);
+    const aesCtrEncryptor = new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(42));
+    const dataToEncrypt = Buffer.concat([witness.getX().toArrayLike(Buffer, "be", 32), witness.getR().toArrayLike(Buffer, "be", 32)]);
+    const encryptedBytes = aesCtrEncryptor.encrypt(dataToEncrypt);
+    console.log("Succesfully encrypted");
+    const aesCtrDecryptor = new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(42));
+    const decryptedBytes = new Buffer.from(aesCtrDecryptor.decrypt(encryptedBytes));
+    assert(decryptedBytes.equals(dataToEncrypt), "Failed to decrypt");
+    console.log("Succesfully decrypted");
+    const transferedValue = new BN(decryptedBytes.slice(0, 32), 16, "be");
+    const blindingFactor = new BN(decryptedBytes.slice(32, 64), 16, "be");
+
+    assert(transferedValue.cmp(transferToAlice) === 0, "Did not restore a transfer value");
+
+    const alicesOutput = witness.getCommitment().serialize(true);
+    const restoredCommitment = new PeddersenCommitment(parameters.getBase(), transferedValue, blindingFactor);
+    const restoredOutput = restoredCommitment.getCommitment().serialize(true);
+
+    assert(alicesOutput.equals(restoredOutput), "Failed to restore an output");
+    console.log("Protocol is complete")
 }
 
 transferProtocol();

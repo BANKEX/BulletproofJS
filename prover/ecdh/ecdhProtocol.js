@@ -1,12 +1,10 @@
 "use strict";
 exports.__esModule = true;
 var ECDHProtocol = /** @class */ (function () {
-    function ECDHProtocol(witness, otherSideKey) {
-        this.witness = witness;
-        this.otherSideKey = otherSideKey;
+    function ECDHProtocol() {
     }
-    ECDHProtocol.prototype.getAgreedKey = function () {
-        return this.otherSideKey.mul(this.witness.getRandomness()).getX();
+    ECDHProtocol.getAgreedKey = function (witness, otherSideKey) {
+        return otherSideKey.mul(witness.getRandomness()).getX();
     };
     return ECDHProtocol;
 }());
