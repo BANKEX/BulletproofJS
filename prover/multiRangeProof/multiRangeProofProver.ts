@@ -100,11 +100,11 @@ export class MultiRangeProofProver {
 
         const mainCommitment = polyCommitment.evaluate(x);
 
-        const mu = alpha.add(rho.mul(x)).mod(q);
-        const t = mainCommitment.getX().mod(q);
+        const mu = alpha.add(rho.mul(x)).umod(q);
+        const t = mainCommitment.getX().umod(q);
         const tauX = mainCommitment.getR().add(zs.innerPoduct( new FieldVector(witness.map((w) : BigInteger => {
             return w.getR();
-        }), q))).mod(q);
+        }), q))).umod(q);
 
         const uChallenge = ProofUtils.computeChallengeForBigIntegers(q, [tauX, mu, t]);
         const u = base.g.mul(uChallenge);

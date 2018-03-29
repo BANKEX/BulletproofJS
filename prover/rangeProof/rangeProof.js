@@ -33,26 +33,6 @@ var RangeProof = /** @class */ (function () {
     RangeProof.prototype.gettCommits = function () {
         return this.tCommits;
     };
-    // @Override
-    // public byte[] serialize() {
-    //     List<byte[]> byteArrs = new ArrayList<>();
-    //     byteArrs.add(productProof.serialize());
-    //     byteArrs.add(aI.canonicalRepresentation());
-    //     byteArrs.add(s.canonicalRepresentation());
-    //     tCommits.stream().map(GroupElement::canonicalRepresentation).forEach(byteArrs::add);
-    //     BigInteger q = tCommits.getGroup().groupOrder();
-    //     byteArrs.add(tauX.mod(q).toByteArray());
-    //     byteArrs.add(mu.mod(q).toByteArray());
-    //     byteArrs.add(t.mod(q).toByteArray());
-    //     int totalBytes = byteArrs.stream().mapToInt(arr -> arr.length).sum();
-    //     byte[] fullArray = new byte[totalBytes];
-    //     int currIndex = 0;
-    //     for (byte[] arr2 : byteArrs) {
-    //         System.arraycopy(arr2, 0, fullArray, currIndex, arr2.length);
-    //         currIndex += arr2.length;
-    //     }
-    //     return fullArray;
-    // }
     RangeProof.prototype.numInts = function () {
         return 5;
     };

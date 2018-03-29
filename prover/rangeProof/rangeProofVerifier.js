@@ -21,10 +21,11 @@ var RangeProofVerifier = /** @class */ (function () {
         var THREE = bigInteger_1.toBI(3, 10);
         var q = params.getGroup().order;
         var y = proofUtil_1.ProofUtils.computeChallenge(q, [input, a, s]);
+        // console.log(y.toString(16));
         var ys = fieldVector_1.FieldVector.pow(y, n, q);
         var z = proofUtil_1.ProofUtils.computeChallengeForBigIntegers(q, [y]);
-        var zSquared = z.pow(TWO).mod(q);
-        var zCubed = z.pow(THREE).mod(q);
+        var zSquared = z.pow(TWO).umod(q);
+        var zCubed = z.pow(THREE).umod(q);
         var twos = fieldVector_1.FieldVector.pow(TWO, n, q); // Powers of TWO
         var twoTimesZSquared = twos.times(zSquared);
         var tCommits = proof.gettCommits();
@@ -37,6 +38,7 @@ var RangeProofVerifier = /** @class */ (function () {
         var rhs = tCommits.commit([x, x.pow(TWO)]).add(input.mul(zSquared)).add(base.commit(k, ZERO));
         utils_1.assert(lhs.equals(rhs), "Polynomial identity check failed");
         var uChallenge = proofUtil_1.ProofUtils.computeChallengeForBigIntegers(q, [tauX, mu, t]);
+        // console.log(uChallenge.toString(16));
         var u = base.g.mul(uChallenge);
         var hs = vectorBase.getHs();
         var gs = vectorBase.getGs();
@@ -44,12 +46,8 @@ var RangeProofVerifier = /** @class */ (function () {
         var hExp = ys.times(z).addVector(twoTimesZSquared);
         var P = a.add(s.mul(x)).add(gs.sum().mul(z.neg())).add(hPrimes.commit(hExp.getVector())).sub(base.h.mul(mu)).add(u.mul(t));
         var primeBase = new vectorBase_1.VectorBase(gs, hPrimes, u);
-        // System.out.println("PVerify "+P.normalize());
-        // System.out.println("XVerify" +x);
-        // System.out.println("YVerify" +y);
-        // System.out.println("ZVerify" +z);
-        // System.out.println("uVerify" +u);
         var verifier = new efficientInnerProductVerifier_1.EfficientInnerProductVerifier();
+        // console.log(P.getX().toString(16));
         return verifier.verify(primeBase, P, proof.getProductProof());
     };
     return RangeProofVerifier;

@@ -16,7 +16,7 @@ export class ProofUtils {
             buffers.push(buff)
         }
         const hashed = this.keccak256(Buffer.concat(buffers))
-        const bn = new BNCLASS(hashed, 16, "be").mod(q)
+        const bn = new BNCLASS(hashed, 16, "be").umod(q)
         return bn
         }
 
@@ -31,7 +31,7 @@ export class ProofUtils {
             buffers.push(buff)
         }
         const hashed = this.keccak256(Buffer.concat(buffers))
-        const bn = new BNCLASS(hashed, 16, "be").mod(q)
+        const bn = new BNCLASS(hashed, 16, "be").umod(q)
         return bn
     }
 
@@ -42,7 +42,7 @@ export class ProofUtils {
             buffers.push(buff)
         }
         const hashed = this.keccak256(Buffer.concat(buffers))
-        const bn = new BNCLASS(hashed, 16, "be").mod(q)
+        const bn = new BNCLASS(hashed, 16, "be").umod(q)
         return bn
     }
 

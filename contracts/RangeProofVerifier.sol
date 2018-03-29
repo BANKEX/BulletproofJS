@@ -8,14 +8,14 @@ import {PublicParameters} from "./PublicParameters.sol";
 contract RangeProofVerifier {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
-
-    uint256 public constant m = 64;
-    uint256 public constant n = 6;
+    event DebugEvent(uint256 indexed _i);
+    uint256 public constant m = 16;
+    uint256 public constant n = 4;
     PublicParameters public publicParameters;
     EfficientInnerProductVerifier public ipVerifier;
 
     uint256[m] public twos;
-    uint256 internal lastPowerCreated = 0;
+    uint256 public lastPowerCreated = 0;
 
     function RangeProofVerifier(
         address _publicParameters,
@@ -59,7 +59,9 @@ contract RangeProofVerifier {
         uint256[5] scalars, // [tauX, mu, t, a, b]
         uint256[2*n] ls_coords, // 2 * n
         uint256[2*n] rs_coords  // 2 * n
-    ) public view returns (bool) {
+    ) public 
+    view 
+    returns (bool) {
         RangeProof memory rangeProof;
         alt_bn128.G1Point memory input = alt_bn128.G1Point(coords[0], coords[1]);
         rangeProof.A = alt_bn128.G1Point(coords[2], coords[3]);
@@ -70,9 +72,9 @@ contract RangeProofVerifier {
         rangeProof.t = scalars[2];
         InnerProductProof memory ipProof;
         rangeProof.ipProof = ipProof;
-        for (uint8 i = 0; i < n; i++) {
-            ipProof.ls[i] = alt_bn128.G1Point(ls_coords[i], ls_coords[n + i]);
-            ipProof.rs[i] = alt_bn128.G1Point(rs_coords[i], rs_coords[n + i]);
+        for (uint256 i = 0; i < n; i++) {
+            ipProof.ls[i] = alt_bn128.G1Point(ls_coords[2*i], ls_coords[2*i + 1]);
+            ipProof.rs[i] = alt_bn128.G1Point(rs_coords[2*i], rs_coords[2*i + 1]);
         }
         ipProof.a = scalars[3];
         ipProof.b = scalars[4];
@@ -117,7 +119,9 @@ contract RangeProofVerifier {
     function verifyInternal(
         alt_bn128.G1Point input,
         RangeProof proof
-    ) internal view returns (bool) {
+    ) internal 
+    view 
+    returns (bool) {
         Board memory b;
         b.y = uint256(keccak256(input.X, input.Y, proof.A.X, proof.A.Y, proof.S.X, proof.S.Y)).mod();
         b.ys = powers(b.y);

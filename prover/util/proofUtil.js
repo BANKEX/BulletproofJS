@@ -21,7 +21,7 @@ var ProofUtils = /** @class */ (function () {
             buffers.push(buff);
         }
         var hashed = this.keccak256(buffer_1.Buffer.concat(buffers));
-        var bn = new bigInteger_1.BNCLASS(hashed, 16, "be").mod(q);
+        var bn = new bigInteger_1.BNCLASS(hashed, 16, "be").umod(q);
         return bn;
     };
     ProofUtils.computeChallengeForBigIntegers = function (q, ints) {
@@ -32,7 +32,7 @@ var ProofUtils = /** @class */ (function () {
             buffers.push(buff);
         }
         var hashed = this.keccak256(buffer_1.Buffer.concat(buffers));
-        var bn = new bigInteger_1.BNCLASS(hashed, 16, "be").mod(q);
+        var bn = new bigInteger_1.BNCLASS(hashed, 16, "be").umod(q);
         return bn;
     };
     ProofUtils.randomNumber = function () {
@@ -49,7 +49,7 @@ var ProofUtils = /** @class */ (function () {
             buffers.push(buff);
         }
         var hashed = this.keccak256(buffer_1.Buffer.concat(buffers));
-        var bn = new bigInteger_1.BNCLASS(hashed, 16, "be").mod(q);
+        var bn = new bigInteger_1.BNCLASS(hashed, 16, "be").umod(q);
         return bn;
     };
     return ProofUtils;

@@ -97,7 +97,7 @@ library alt_bn128 {
     }
 
     function modExp(uint256 base, uint256 exponent) internal view returns (uint256) {
-        return modExp(base, exponent, n);
+        return modExp(base, exponent, q);
     }
 
     function hashToCurve(bytes input) internal view returns (G1Point p) {

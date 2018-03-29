@@ -2,8 +2,8 @@ const fs = require("fs");
 const PublicParameters = artifacts.require("PublicParameters.sol");
 const EfficientInnerProductVerifier = artifacts.require("EfficientInnerProductVerifier.sol")
 const RangeProofVerifier = artifacts.require("RangeProofVerifier.sol")
-const M = 64;
-const N = 6;
+const M = 16;
+const N = 4;
 
 module.exports = async function(deployer, network, accounts) {
     const operator = accounts[0];

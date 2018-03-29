@@ -16,11 +16,15 @@ var EfficientInnerProductVerifier = /** @class */ (function () {
         for (var i = 0; i < ls.length; ++i) {
             var l = ls[i];
             var r = rs[i];
+            // console.log(l.getX().toString(16));
+            // console.log(l.getY().toString(16));
             var x = proofUtil_1.ProofUtils.computeChallenge(q, [l, c, r]);
             challenges.push(x);
             var xInv = x.invm(q);
             inverseChallenges.push(xInv);
             c = l.mul(x.pow(TWO)).add(r.mul(xInv.pow(TWO))).add(c);
+            // console.log(x.toString(16));
+            // console.log(c.getX().toString(16));
         }
         var n = params.getGs().size();
         var otherExponents = [];
@@ -28,7 +32,7 @@ var EfficientInnerProductVerifier = /** @class */ (function () {
             otherExponents.push(bigInteger_1.toBI(0, 10));
         }
         otherExponents[0] = challenges.reduce(function (prev, current) {
-            return prev.mul(current).mod(q);
+            return prev.mul(current).umod(q);
         }, ONE).invm(q);
         challenges = challenges.reverse();
         var bitSet = bigInteger_1.toBI(0, 10);
@@ -45,7 +49,7 @@ var EfficientInnerProductVerifier = /** @class */ (function () {
                 if (bitSet.testn(i1)) {
                 }
                 else {
-                    otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).mod(q);
+                    otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).umod(q);
                     bitSet = bitSet.bincn(i1);
                 }
                 j++;
@@ -57,8 +61,10 @@ var EfficientInnerProductVerifier = /** @class */ (function () {
         }
         var g = params.getGs().commit(challengeVector);
         var h = params.getHs().commit(challengeVector.reverse());
-        var prod = proof.getA().mul(proof.getB()).mod(q);
+        var prod = proof.getA().mul(proof.getB()).umod(q);
+        // console.log(prod.toString(16));
         var cProof = g.mul(proof.getA()).add(h.mul(proof.getB())).add(params.getH().mul(prod));
+        // console.log(cProof.getX().toString(16));
         return c.equals(cProof);
     };
     return EfficientInnerProductVerifier;

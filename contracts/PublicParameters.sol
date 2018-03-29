@@ -19,11 +19,14 @@ import {Conversion} from "./Conversion.sol";
 // }
 
 contract PublicParameters {
+
+    event VectorCreated(uint256 _i);
+
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
     using Conversion for uint256;
-    uint256 public constant m = 64;
-    uint256 public constant n = 6;
+    uint256 public constant m = 16;
+    uint256 public constant n = 4;
 
     uint256[2] public signatureGenerator;
     uint256[2] public baseG;
@@ -31,8 +34,8 @@ contract PublicParameters {
     uint256[m*2] public gVector;
     uint256[m*2] public hVector;
     
-    uint256 lastGcreated = 0;
-    uint256 lastHcreated = 0;
+    uint256 public lastGcreated = 0;
+    uint256 public lastHcreated = 0;
 
     function PublicParameters() public {
         signatureGenerator = signaturePublicGenerator();
@@ -53,6 +56,7 @@ contract PublicParameters {
             gVector[i*2 + 1] = reusablePoints[1];
         }
         lastGcreated = lastGcreated+maxToCreate;
+        emit VectorCreated(lastGcreated);
         return true;
     }
 

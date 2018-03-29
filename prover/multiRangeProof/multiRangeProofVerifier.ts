@@ -46,8 +46,8 @@ export class MultiRangeProofVerifier {
         }, [] as BigInteger[]);
         assert(elements.length == n);
         const twoTimesZSquared = new FieldVector(elements, q)  
-        const zSum = zs.sum().mul(z).mod(q);
-        const k = ys.sum().mul(z.sub(zs.get(0))).sub(zSum.shln(bitsPerNumber).sub(zSum)).mod(q);
+        const zSum = zs.sum().mul(z).umod(q);
+        const k = ys.sum().mul(z.sub(zs.get(0))).sub(zSum.shln(bitsPerNumber).sub(zSum)).umod(q);
 
         const tCommits = proof.gettCommits();
 

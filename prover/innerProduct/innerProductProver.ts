@@ -63,8 +63,8 @@ export class InnerProductProver {
         const x = ProofUtils.computeChallenge(q, [L, P, R]);
         const xInv = x.invm(q) as BigInteger;
         const TWO = toBI(2, 10);
-        const xSquare = x.pow(TWO).mod(q) as BigInteger;
-        const xInvSquare = xInv.pow(TWO).mod(q) as BigInteger;
+        const xSquare = x.pow(TWO).umod(q) as BigInteger;
+        const xInvSquare = xInv.pow(TWO).umod(q) as BigInteger;
         let xs = [] as  BigInteger[]
         let xInverses = [] as BigInteger[]
         for (let i = 0; i < nPrime; i++) {

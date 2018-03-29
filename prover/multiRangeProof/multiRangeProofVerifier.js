@@ -37,8 +37,8 @@ var MultiRangeProofVerifier = /** @class */ (function () {
         }, []);
         utils_1.assert(elements.length == n);
         var twoTimesZSquared = new fieldVector_1.FieldVector(elements, q);
-        var zSum = zs.sum().mul(z).mod(q);
-        var k = ys.sum().mul(z.sub(zs.get(0))).sub(zSum.shln(bitsPerNumber).sub(zSum)).mod(q);
+        var zSum = zs.sum().mul(z).umod(q);
+        var k = ys.sum().mul(z.sub(zs.get(0))).sub(zSum.shln(bitsPerNumber).sub(zSum)).umod(q);
         var tCommits = proof.gettCommits();
         var x = proofUtil_1.ProofUtils.computeChallenge(q, tCommits.getVector());
         var tauX = proof.getTauX();

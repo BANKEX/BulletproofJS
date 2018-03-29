@@ -23,11 +23,12 @@ export class RangeProofVerifier {
 
         const q = params.getGroup().order;
         const y = ProofUtils.computeChallenge(q, [input, a, s]);
+        // console.log(y.toString(16));
         const ys = FieldVector.pow(y, n, q);
         
         const z = ProofUtils.computeChallengeForBigIntegers(q,[y]) as BigInteger;
-        const zSquared = z.pow(TWO).mod(q) as BigInteger;
-        const zCubed = z.pow(THREE).mod(q) as BigInteger;
+        const zSquared = z.pow(TWO).umod(q) as BigInteger;
+        const zCubed = z.pow(THREE).umod(q) as BigInteger;
 
         const twos = FieldVector.pow(TWO, n, q); // Powers of TWO
         const twoTimesZSquared = twos.times(zSquared);
@@ -44,6 +45,7 @@ export class RangeProofVerifier {
         assert(lhs.equals(rhs), "Polynomial identity check failed");
 
         const uChallenge = ProofUtils.computeChallengeForBigIntegers(q,[tauX, mu, t]);
+        // console.log(uChallenge.toString(16));
         const u = base.g.mul(uChallenge);
         const hs = vectorBase.getHs();
         const gs = vectorBase.getGs();
@@ -51,12 +53,8 @@ export class RangeProofVerifier {
         const hExp = ys.times(z).addVector(twoTimesZSquared);
         const P = a.add(s.mul(x)).add(gs.sum().mul(z.neg())).add(hPrimes.commit(hExp.getVector())).sub(base.h.mul(mu)).add(u.mul(t));
         const primeBase = new VectorBase(gs, hPrimes, u);
-        // System.out.println("PVerify "+P.normalize());
-        // System.out.println("XVerify" +x);
-        // System.out.println("YVerify" +y);
-        // System.out.println("ZVerify" +z);
-        // System.out.println("uVerify" +u);
         const verifier = new EfficientInnerProductVerifier();
+        // console.log(P.getX().toString(16));
         return verifier.verify(primeBase, P, proof.getProductProof());
 
     }

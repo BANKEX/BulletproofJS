@@ -82,11 +82,11 @@ var MultiRangeProofProver = /** @class */ (function () {
         var polyCommitment = polyCommitment_1.PolyCommitment.from(base, tPolyCoefficients[0], tPolyCoefficients.slice(1));
         var x = proofUtil_1.ProofUtils.computeChallenge(q, polyCommitment.getNonzeroCommitments());
         var mainCommitment = polyCommitment.evaluate(x);
-        var mu = alpha.add(rho.mul(x)).mod(q);
-        var t = mainCommitment.getX().mod(q);
+        var mu = alpha.add(rho.mul(x)).umod(q);
+        var t = mainCommitment.getX().umod(q);
         var tauX = mainCommitment.getR().add(zs.innerPoduct(new fieldVector_1.FieldVector(witness.map(function (w) {
             return w.getR();
-        }), q))).mod(q);
+        }), q))).umod(q);
         var uChallenge = proofUtil_1.ProofUtils.computeChallengeForBigIntegers(q, [tauX, mu, t]);
         var u = base.g.mul(uChallenge);
         var hs = vectorBase.getHs();

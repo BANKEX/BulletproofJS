@@ -25,12 +25,15 @@ export class EfficientInnerProductVerifier {
         for (let i = 0; i < ls.length; ++i) {
             const l = ls[i];
             const r = rs[i];
+            // console.log(l.getX().toString(16));
+            // console.log(l.getY().toString(16));
             const x = ProofUtils.computeChallenge(q, [l, c, r]);
             challenges.push(x);
             const xInv = x.invm(q) as BigInteger;
             inverseChallenges.push(xInv);
             c = l.mul(x.pow(TWO)).add(r.mul(xInv.pow(TWO))).add(c);
-
+            // console.log(x.toString(16));
+            // console.log(c.getX().toString(16));
         }
         const n = params.getGs().size() as number;
         const otherExponents = [] as BigInteger[];
@@ -38,7 +41,7 @@ export class EfficientInnerProductVerifier {
             otherExponents.push(toBI(0, 10));
         }
         otherExponents[0] = challenges.reduce((prev, current) => {
-            return prev.mul(current).mod(q)
+            return prev.mul(current).umod(q)
         }, ONE).invm(q)
         challenges = challenges.reverse()
         let bitSet = toBI(0, 10);
@@ -56,7 +59,7 @@ export class EfficientInnerProductVerifier {
                 
                 }
                 else {
-                    otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).mod(q);
+                    otherExponents[i1] = otherExponents[i].mul(challenges[j].pow(TWO)).umod(q);
                     bitSet = bitSet.bincn(i1);
                 }
                 j++;
@@ -69,9 +72,12 @@ export class EfficientInnerProductVerifier {
             challengeVector.push(otherExponents[i]);
             }
         const g = params.getGs().commit(challengeVector);
+
         const h = params.getHs().commit(challengeVector.reverse());
-        const prod = proof.getA().mul(proof.getB()).mod(q);
+        const prod = proof.getA().mul(proof.getB()).umod(q);
+        // console.log(prod.toString(16));
         const cProof = g.mul(proof.getA()).add(h.mul(proof.getB())).add(params.getH().mul(prod));
+        // console.log(cProof.getX().toString(16));
         return c.equals(cProof);
     }
 }

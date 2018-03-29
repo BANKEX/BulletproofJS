@@ -7,9 +7,9 @@ import {PublicParameters} from "./PublicParameters.sol";
 contract EfficientInnerProductVerifier {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
-
-    uint256 public constant m = 64;
-    uint256 public constant n = 6;
+    event DebugEvent(uint256 indexed _i);
+    uint256 public constant m = 16;
+    uint256 public constant n = 4;
     PublicParameters public publicParameters;
 
     function EfficientInnerProductVerifier(
@@ -48,7 +48,9 @@ contract EfficientInnerProductVerifier {
         uint256[n] rs_y,
         uint256 A,
         uint256 B
-    ) external view returns (bool) {
+    ) public
+    // view 
+    returns (bool) {
         return verifyWithCustomParams(alt_bn128.G1Point(c_x, c_y), ls_x, ls_y, rs_x, rs_y, A, B, publicParameters.hs(), publicParameters.H());
     }
 
@@ -62,10 +64,12 @@ contract EfficientInnerProductVerifier {
         uint256 B,
         alt_bn128.G1Point[m] hs,
         alt_bn128.G1Point H
-    ) public view returns (bool) {
+    ) public
+    view 
+    returns (bool) {
         Board memory b;
         b.c = c;
-        for (uint8 i = 0; i < n; i++) {
+        for (uint256 i = 0; i < n; i++) {
             b.l = alt_bn128.G1Point(ls_x[i], ls_y[i]);
             b.r = alt_bn128.G1Point(rs_x[i], rs_y[i]);
             b.x = uint256(keccak256(b.l.X, b.l.Y, b.c.X, b.c.Y, b.r.X, b.r.Y)).mod();

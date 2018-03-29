@@ -57,8 +57,8 @@ export class RangeProofProver {
         const ys = FieldVector.pow(y, n, q);
 
         const z = ProofUtils.computeChallengeForBigIntegers(q,[y]) as BigInteger;
-        const zSquared = z.pow(TWO).mod(q) as BigInteger;
-        const zCubed = z.pow(THREE).mod(q) as BigInteger;
+        const zSquared = z.pow(TWO).umod(q) as BigInteger;
+        const zCubed = z.pow(THREE).umod(q) as BigInteger;
 
         const twos = FieldVector.pow(TWO, n, q);
         const l0 = aL.addScalar(z.neg());
@@ -76,9 +76,9 @@ export class RangeProofProver {
         const x = ProofUtils.computeChallenge(q, polyCommitment.getNonzeroCommitments());
 
         const evalCommit = polyCommitment.evaluate(x);
-        const tauX = zSquared.mul(witness.getR()).add(evalCommit.getR()).mod(q);
-        const t = evalCommit.getX().mod(q);
-        const mu = alpha.add(rho.mul(x)).mod(q);
+        const tauX = zSquared.mul(witness.getR()).add(evalCommit.getR()).umod(q);
+        const t = evalCommit.getX().umod(q);
+        const mu = alpha.add(rho.mul(x)).umod(q);
 
         const uChallenge = ProofUtils.computeChallengeForBigIntegers(q, [tauX, mu, t]);
         const u = base.g.mul(uChallenge);

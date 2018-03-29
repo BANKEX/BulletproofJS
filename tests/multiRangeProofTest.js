@@ -22,7 +22,7 @@ function testSoundness() {
 
     const q = group.order;
     console.log("Group order = " + q.toString(10) + "\n");
-    const parameters = GeneratorParams.generateParams(256, group);
+    const parameters = GeneratorParams.generateParams(64, group);
     // parameters.getVectorBase().getGs().getVector().map((v) => {
     //     console.log("gs = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
     // })
