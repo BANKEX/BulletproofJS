@@ -2,25 +2,21 @@ pragma solidity ^0.4.21;
 pragma experimental ABIEncoderV2;
 
 import "./alt_bn128.sol";
-import {PublicParametersInterface} from "./PublicParameters.sol";
+import {PublicParameters} from "./PublicParameters.sol";
 
 contract EfficientInnerProductVerifier {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
 
-    uint256 public constant m = 256;
-    uint256 public constant n = 8;
-    PublicParametersInterface public publicParameters;
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
+    PublicParameters public publicParameters;
 
     function EfficientInnerProductVerifier(
         address _publicParameters
-        // uint256 H_x,
-        // uint256 H_y,
-        // uint256[2 * m] gs_coords,
-        // uint256[2 * m] hs_coords
     ) public {
         require(_publicParameters != address(0));
-        publicParameters = PublicParametersInterface(_publicParameters);
+        publicParameters = PublicParameters(_publicParameters);
         require(m == publicParameters.m());
         require(n == publicParameters.n());
     }
@@ -53,22 +49,8 @@ contract EfficientInnerProductVerifier {
         uint256 A,
         uint256 B
     ) external view returns (bool) {
-        alt_bn128.G1Point memory H = assemblePoint(publicParameters.peddersenBaseH());
-        alt_bn128.G1Point[m] memory hs = assemblePointsFromEncodings(publicParameters.getHVector());
-        return verifyWithCustomParams(alt_bn128.G1Point(c_x, c_y), ls_x, ls_y, rs_x, rs_y, A, B, hs, H);
+        return verifyWithCustomParams(alt_bn128.G1Point(c_x, c_y), ls_x, ls_y, rs_x, rs_y, A, B, publicParameters.hs(), publicParameters.H());
     }
-
-    function assemblePointsFromEncodings(uint256[m*2] _pointsEncoding) internal pure returns(alt_bn128.G1Point[m] memory points) {
-        for (uint256 i = 0; i < m; i++) {
-            points[i] = alt_bn128.G1Point(_pointsEncoding[2*i], _pointsEncoding[2*i + 1]);
-        }
-        return points;
-    }
-
-    function assemblePoint(uint256[2] _encoding) internal pure returns(alt_bn128.G1Point memory point) {
-        return alt_bn128.G1Point(_encoding[0], _encoding[1]);
-    }
-
 
     function verifyWithCustomParams(
         alt_bn128.G1Point c,
@@ -120,7 +102,7 @@ contract EfficientInnerProductVerifier {
     }
 
     function multiExpGs(uint256[m] ss) internal view returns (alt_bn128.G1Point g) {
-        alt_bn128.G1Point[m] memory gs = assemblePointsFromEncodings(publicParameters.getGVector());
+        alt_bn128.G1Point[m] memory gs = publicParameters.gs();
         g = gs[0].mul(ss[0]);
         for (uint256 i = 1; i < m; i++) {
             g = g.add(gs[i].mul(ss[i]));

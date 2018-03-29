@@ -1,38 +1,57 @@
 pragma solidity ^0.4.21;
 pragma experimental ABIEncoderV2;
 
-import "./EfficientInnerProductVerifier.sol";
 import "./alt_bn128.sol";
+import {EfficientInnerProductVerifier} from "./EfficientInnerProductVerifier.sol";
+import {PublicParameters} from "./PublicParameters.sol";
 
 contract RangeProofVerifier {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
 
-    uint256 public constant m = 4;
-    uint256 public constant n = 2;
-
-    alt_bn128.G1Point[m] public gs;
-    alt_bn128.G1Point[m] public hs;
-    alt_bn128.G1Point public peddersenBaseG;
-    alt_bn128.G1Point public peddersenBaseH;
-
-    uint256[m] internal twos = powers(2);
-
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
+    PublicParameters public publicParameters;
     EfficientInnerProductVerifier public ipVerifier;
 
+    uint256[m] public twos;
+    uint256 internal lastPowerCreated = 0;
+
     function RangeProofVerifier(
-        uint256[4] coords, // [peddersenBaseG_x, peddersenBaseG_y, peddersenBaseH_x, peddersenBaseH_y]
-        uint256[2 * m] gs_coords,
-        uint256[2 * m] hs_coords,
-        EfficientInnerProductVerifier _ipVerifier
+        address _publicParameters,
+        address _ipVerifier
     ) public {
-        peddersenBaseG = alt_bn128.G1Point(coords[0], coords[1]);
-        peddersenBaseH = alt_bn128.G1Point(coords[2], coords[3]);
-        for (uint8 i = 0; i < m; i++) {
-            gs[i] = alt_bn128.G1Point(gs_coords[i], gs_coords[m + i]);
-            hs[i] = alt_bn128.G1Point(hs_coords[i], hs_coords[m + i]);
+        require(_publicParameters != address(0));
+        require(_ipVerifier != address(0));
+        publicParameters = PublicParameters(_publicParameters);
+        ipVerifier = EfficientInnerProductVerifier(_ipVerifier);
+        require(m == publicParameters.m());
+        require(n == publicParameters.n());
+        require(m == ipVerifier.m());
+        require(n == ipVerifier.n());
+    }
+
+    function producePowers() public returns(bool success) {
+        require(lastPowerCreated < m);
+        uint256 base = 2;
+        uint256 maxToCreate = m - lastPowerCreated;
+        if (maxToCreate > n) {
+            maxToCreate = n;
         }
-        ipVerifier = _ipVerifier;
+        uint256 i;
+        if (lastPowerCreated == 0) {
+            twos[0] = 1;
+            twos[1] = base;
+            for (i = 2; i < m; i++) {
+                twos[i] = twos[i-1].mul(base);
+            }
+        } else {
+            for (i = lastPowerCreated; i < lastPowerCreated + maxToCreate; i++) {
+                twos[i] = twos[i-1].mul(base);
+            }
+        }
+        lastPowerCreated = lastPowerCreated + maxToCreate;
+        return true;
     }
 
     function verify(
@@ -40,7 +59,7 @@ contract RangeProofVerifier {
         uint256[5] scalars, // [tauX, mu, t, a, b]
         uint256[2*n] ls_coords, // 2 * n
         uint256[2*n] rs_coords  // 2 * n
-    ) external view returns (bool) {
+    ) public view returns (bool) {
         RangeProof memory rangeProof;
         alt_bn128.G1Point memory input = alt_bn128.G1Point(coords[0], coords[1]);
         rangeProof.A = alt_bn128.G1Point(coords[2], coords[3]);
@@ -107,34 +126,34 @@ contract RangeProofVerifier {
         b.zCubed = b.zSquared.mul(b.z);
         b.twoTimesZSquared = times(twos, b.zSquared);
         b.x = uint256(keccak256(proof.commits[0].X, proof.commits[0].Y, proof.commits[1].X, proof.commits[1].Y)).mod();
-        b.lhs = peddersenBaseG.mul(proof.t).add(peddersenBaseH.mul(proof.tauX));
+        b.lhs = publicParameters.G().mul(proof.t).add(publicParameters.H().mul(proof.tauX));
         b.k = sumScalars(b.ys).mul(b.z.sub(b.zSquared)).sub(b.zCubed.mul(2 ** m).sub(b.zCubed));
         b.rhs = proof.commits[0].mul(b.x).add(proof.commits[1].mul(b.x.mul(b.x)));
         b.rhs = b.rhs.add(input.mul(b.zSquared));
-        b.rhs = b.rhs.add(peddersenBaseG.mul(b.k));
+        b.rhs = b.rhs.add(publicParameters.G().mul(b.k));
         if (!b.rhs.eq(b.lhs)) {
             return false;
         }
         b.uChallenge = uint256(keccak256(proof.tauX, proof.mu, proof.t)).mod();
-        b.u = peddersenBaseG.mul(b.uChallenge);
-        alt_bn128.G1Point[m] memory hPrimes = haddamard_inv(hs, b.ys);
+        b.u = publicParameters.G().mul(b.uChallenge);
+        alt_bn128.G1Point[m] memory hPrimes = haddamard_inv(publicParameters.hs(), b.ys);
         uint256[m] memory hExp = addVectors(times(b.ys, b.z), b.twoTimesZSquared);
         b.P = proof.A.add(proof.S.mul(b.x));
-        b.P = b.P.add(sumPoints(gs).mul(b.z.neg()));
+        b.P = b.P.add(sumPoints(publicParameters.gs()).mul(b.z.neg()));
         b.P = b.P.add(commit(hPrimes, hExp));
-        b.P = b.P.add(peddersenBaseH.mul(proof.mu).neg());
+        b.P = b.P.add(publicParameters.H().mul(proof.mu).neg());
         b.P = b.P.add(b.u.mul(proof.t));
         return ipVerifier.verifyWithCustomParams(b.P, toXs(proof.ipProof.ls), toYs(proof.ipProof.ls), toXs(proof.ipProof.rs), toYs(proof.ipProof.rs), proof.ipProof.a, proof.ipProof.b, hPrimes, b.u);
     }
 
     function addVectors(uint256[m] a, uint256[m] b) internal pure returns (uint256[m] result) {
-        for (uint8 i = 0; i < m; i++) {
+        for (uint256 i = 0; i < m; i++) {
             result[i] = a[i].add(b[i]);
         }
     }
 
     function haddamard_inv(alt_bn128.G1Point[m] ps, uint256[m] ss) internal view returns (alt_bn128.G1Point[m] result) {
-        for (uint8 i = 0; i < m; i++) {
+        for (uint256 i = 0; i < m; i++) {
             result[i] = ps[i].mul(ss[i].inv());
         }
     }
@@ -147,26 +166,26 @@ contract RangeProofVerifier {
 
     function sumPoints(alt_bn128.G1Point[m] ps) internal view returns (alt_bn128.G1Point sum) {
         sum = ps[0];
-        for (uint8 i = 1; i < m; i++) {
+        for (uint256 i = 1; i < m; i++) {
             sum = sum.add(ps[i]);
         }
     }
 
     function commit(alt_bn128.G1Point[m] ps, uint256[m] ss) internal view returns (alt_bn128.G1Point commit) {
         commit = ps[0].mul(ss[0]);
-        for (uint8 i = 1; i < m; i++) {
+        for (uint256 i = 1; i < m; i++) {
             commit = commit.add(ps[i].mul(ss[i]));
         }
     }
 
     function toXs(alt_bn128.G1Point[n] ps) internal pure returns (uint256[n] xs) {
-        for (uint8 i = 0; i < n; i++) {
+        for (uint256 i = 0; i < n; i++) {
             xs[i] = ps[i].X;
         }
     }
 
     function toYs(alt_bn128.G1Point[n] ps) internal pure returns (uint256[n] ys) {
-        for (uint8 i = 0; i < n; i++) {
+        for (uint256 i = 0; i < n; i++) {
             ys[i] = ps[i].Y;
         }
     }
@@ -174,13 +193,13 @@ contract RangeProofVerifier {
     function powers(uint256 base) internal pure returns (uint256[m] powers) {
         powers[0] = 1;
         powers[1] = base;
-        for (uint8 i = 2; i < m; i++) {
+        for (uint256 i = 2; i < m; i++) {
             powers[i] = powers[i-1].mul(base);
         }
     }
 
     function times(uint256[m] v, uint256 x) internal pure returns (uint256[m] result) {
-        for (uint8 i = 0; i < m; i++) {
+        for (uint256 i = 0; i < m; i++) {
             result[i] = v[i].mul(x);
         }
     }

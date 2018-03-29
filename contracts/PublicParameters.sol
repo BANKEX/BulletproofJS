@@ -1,44 +1,30 @@
 pragma solidity ^0.4.21;
-// pragma experimental ABIEncoderV2;
+pragma experimental ABIEncoderV2;
 
 import {alt_bn128} from "./alt_bn128.sol";
 import {Conversion} from "./Conversion.sol";
 
 // m = 256 implied in interface
 
-interface PublicParametersInterface {
-    function m() external view returns (uint256 mValue);
-    function n() external view returns (uint256 nValue);
-    function signaturePublicGenerator() external pure returns (uint256[2] point);
-    function peddersenBaseG() external view returns (uint256[2] point);
-    function peddersenBaseH() external view returns (uint256[2] point);
-    function getGVectorComponent(uint256 index) external view returns (uint256[2] point);
-    function getHVectorComponent(uint256 index) external view returns (uint256[2] point); 
-    function getGVector() external view returns (uint256[2*256] points);
-    function getHVector() external view returns (uint256[2*256] points);
-}
+// interface PublicParametersInterface {
+//     function m() external view returns (uint256 mValue);
+//     function n() external view returns (uint256 nValue);
+//     function signaturePublicGenerator() external pure returns (uint256[2] point);
+//     function peddersenBaseG() external view returns (uint256[2] point);
+//     function peddersenBaseH() external view returns (uint256[2] point);
+//     function getGVectorComponent(uint256 index) external view returns (uint256[2] point);
+//     function getHVectorComponent(uint256 index) external view returns (uint256[2] point); 
+//     function getGVector() external view returns (uint256[2*256] points);
+//     function getHVector() external view returns (uint256[2*256] points);
+// }
 
 contract PublicParameters {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
     using Conversion for uint256;
-    uint256 public constant m = 256;
-    uint256 public constant n = 8;
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
 
-
-    // uint256 public constant PrimeOrder = alt_bn128.n;
-    // uint256 public constant CurveOrder = alt_bn128.q;
-    // uint256 public constant PrimeOrder = 21888242871839275222246405745257275088548364400416034343698204186575808495617; // curve order
-    // uint256 constant public N = 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001;
-    
-    // uint256 public constant CurveOrder = 21888242871839275222246405745257275088696311157297823662689037894645226208583; // prime field order
-    // uint256 constant public P = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
-    
-    // uint256 constant public ECSignMask = 0x8000000000000000000000000000000000000000000000000000000000000000;
-    // uint256 constant public BigModExponent = (PrimeOrder + 1)/4;
-    // uint256 constant public a = 5472060717959818805561601436314318772174077789324455915672259473661306552146;
-    // uint256 constant public a = 0xc19139cb84c680a6e14116da060561765e05aa45a1c72a34f082305b61f3f52; // (p+1)/4
-    
     uint256[2] public signatureGenerator;
     uint256[2] public baseG;
     uint256[2] public baseH;
@@ -134,6 +120,37 @@ contract PublicParameters {
             points[i*2 + 1] = reusablePoints[1];
         }
         return points;
+    }
+
+    function generator() public view returns (alt_bn128.G1Point memory p) {
+        return assemblePoint(signatureGenerator);
+    }
+
+    function G() public view returns (alt_bn128.G1Point memory p) {
+        return assemblePoint(peddersenBaseG());
+    }
+
+    function H() public view returns (alt_bn128.G1Point memory p) {
+        return assemblePoint(peddersenBaseH());
+    }
+
+    function gs() public view returns(alt_bn128.G1Point[m] memory points){
+        return assemblePointsFromEncodings(getGVector());
+    }
+
+    function hs() public view returns(alt_bn128.G1Point[m] memory points){
+        return assemblePointsFromEncodings(getHVector());
+    }
+
+    function assemblePointsFromEncodings(uint256[m*2] _pointsEncoding) internal pure returns(alt_bn128.G1Point[m] memory points) {
+        for (uint256 i = 0; i < m; i++) {
+            points[i] = alt_bn128.G1Point(_pointsEncoding[2*i], _pointsEncoding[2*i + 1]);
+        }
+        return points;
+    }
+
+    function assemblePoint(uint256[2] _encoding) internal pure returns(alt_bn128.G1Point memory point) {
+        return alt_bn128.G1Point(_encoding[0], _encoding[1]);
     }
 
     // function uintToString(uint256 index) internal pure returns(bytes memory res) {

@@ -23,7 +23,7 @@ function testSoundness() {
     console.log("Group order = " + q.toString(10) + "\n");
     console.log("Secret 1 = " + randomness.toString(10) + "\n");
     console.log("Secret 2 = " + q.sub(randomness).toString(10) + "\n");
-    const parameters = GeneratorParams.generateParams(4, group);
+    const parameters = GeneratorParams.generateParams(256, group);
     // parameters.getVectorBase().getGs().getVector().map((v) => {
     //     console.log("gs = [0x"+v.getX().toString(16) + ", 0x"+v.getY().toString(16) + "]")
     // })
