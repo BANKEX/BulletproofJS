@@ -112,6 +112,15 @@ var ECPoint = /** @class */ (function () {
             return buffer_1.Buffer.concat([this.getX().toArrayLike(buffer_1.Buffer, "be"), this.getY().toArrayLike(buffer_1.Buffer, "be")]);
         }
     };
+    ECPoint.prototype.compress = function () {
+        var X = this.getX().toArrayLike(buffer_1.Buffer, "be", 32);
+        if (this.getY().isEven()) {
+            return buffer_1.Buffer.concat([buffer_1.Buffer.from([0x02]), X]);
+        }
+        else {
+            return buffer_1.Buffer.concat([buffer_1.Buffer.from([0x03]), X]);
+        }
+    };
     ECPoint.prototype.equals = function (other) {
         return this.getX().cmp(other.getX()) == 0 && this.getY().cmp(other.getY()) == 0;
     };

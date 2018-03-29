@@ -133,6 +133,15 @@ export class ECPoint {
         }
     }
 
+    compress(): Buffer {
+        const X = this.getX().toArrayLike(Buffer, "be", 32);
+        if (this.getY().isEven()) {
+            return Buffer.concat([Buffer.from([0x02]), X]);
+        } else {
+            return Buffer.concat([Buffer.from([0x03]), X]);
+        }
+    }
+
     equals(other: ECPoint): Boolean {
         return this.getX().cmp(other.getX()) == 0 && this.getY().cmp(other.getY()) == 0
     }
