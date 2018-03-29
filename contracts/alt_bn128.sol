@@ -96,6 +96,10 @@ library alt_bn128 {
         return output[0];
     }
 
+    function modExp(uint256 base, uint256 exponent) internal view returns (uint256) {
+        return modExp(base, exponent, n);
+    }
+
     function hashToCurve(bytes input) internal view returns (G1Point p) {
         uint256 seed = uint256(keccak256(input));
         return uintToCurvePoint(seed);
