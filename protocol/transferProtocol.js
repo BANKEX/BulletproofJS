@@ -18,18 +18,27 @@ const {SchnorrWitness} = require("../prover/schnorrSignature/schnorrWitness")
 const aesjs = require('aes-js');
 const {ECDHWitness} = require("../prover/ecdh/ecdhWitness");
 const {ECDHProtocol} = require("../prover/ecdh/ecdhProtocol");
-
+const {BIP32Deriver} = require("../prover/bip32/bip32Derivation");
 function transferProtocol() {
     const group = new ECCurve("bn256")
     const signatureGenerator = group.generator;
+    const data = secureRandom(32, {type: 'Buffer'});
+    const index = new BN(data, 16, "be");
     const Alice = SchnorrWitness.newKey(signatureGenerator)
     const Bob = SchnorrWitness.newKey(signatureGenerator)
     const q = group.order;
     const parameters = GeneratorParams.generateParams(64, group);
 
-    const AliceEphemeral = Alice;
-    const BobEphemeral = Bob; //for now
+    const BobEphemeral = Bob;
 
+    const AliceEphemeralDerived = BIP32Deriver.derivePrivate(Alice, index);
+    const AliceEphemeral = AliceEphemeralDerived.newWitness;
+    const derivedIndex = AliceEphemeralDerived.newIndex;
+    const AliceEphemeralDerivedPublic = BIP32Deriver.derivePublic(Alice.getPublicKey(), signatureGenerator, index);
+    const AliceEphemeralPublicKey = AliceEphemeralDerivedPublic.newPublicKey;
+    const derivedAliceIndex = AliceEphemeralDerivedPublic.newIndex;
+    assert(derivedAliceIndex.cmp(derivedIndex) === 0, 'BIP32 failed');
+    assert(AliceEphemeral.getPublicKey().equals(AliceEphemeralPublicKey), 'BIP32 failed');
     const bobsDeposit = new BN(100);
     const bobsBlinding = ProofUtils.randomNumber();
     const bobsDepositWitness = new PeddersenCommitment(parameters.getBase(), bobsDeposit, bobsBlinding);
@@ -55,14 +64,24 @@ function transferProtocol() {
     assert(result, "Failed to provide a proof of sum to zero");
     console.log("Proved sum to zero");
 
-    const ecdhWitnessAlice = new ECDHWitness(AliceEphemeral.getPrivateKey(), AliceEphemeral.getGenerator())
+    // const ecdhWitnessAlice = new ECDHWitness(AliceEphemeral.getPrivateKey(), AliceEphemeral.getGenerator())
+    // const ecdhWitnessBob = new ECDHWitness(BobEphemeral.getPrivateKey(), BobEphemeral.getGenerator())
+
+    // const agreedKey = ECDHProtocol.getAgreedKey(ecdhWitnessAlice, ecdhWitnessBob.getKey());
+    // const agreedKey2 = ECDHProtocol.getAgreedKey(ecdhWitnessBob, ecdhWitnessAlice.getKey());
+
+    // assert(agreedKey.cmp(agreedKey2) === 0, "ECDH failed");
+    // console.log("ECDH has completed");
+
+    // const ephemeralECDHwitness = ECDHWitness.newKey(signatureGenerator);
+    // const trueAgreedKey = ECDHProtocol.getAgreedKey(ephemeralECDHwitness, AliceEphemeralPublicKey)
+
+    // Bob does ECDH on his side, using his private key and derived Alice's public key
+
     const ecdhWitnessBob = new ECDHWitness(BobEphemeral.getPrivateKey(), BobEphemeral.getGenerator())
+    const trueAgreedKey = ECDHProtocol.getAgreedKey(ecdhWitnessBob, AliceEphemeralPublicKey)
 
-    const agreedKey = ECDHProtocol.getAgreedKey(ecdhWitnessAlice, ecdhWitnessBob.getKey());
-    const agreedKey2 = ECDHProtocol.getAgreedKey(ecdhWitnessBob, ecdhWitnessAlice.getKey());
 
-    assert(agreedKey.cmp(agreedKey2) === 0, "ECDH failed");
-    console.log("ECDH has completed");
 
     const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
     const prover = new MultiRangeProofProver();
@@ -72,12 +91,20 @@ function transferProtocol() {
     assert(valid, "Range proof is not valid");
     console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
 
-    const key = agreedKey.toArrayLike(Buffer, "be", 32);
-    const aesCtrEncryptor = new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(42));
+    const originalKey = trueAgreedKey.toArrayLike(Buffer, "be", 32);
+    const aesCtrEncryptor = new aesjs.ModeOfOperation.ctr(originalKey, new aesjs.Counter(42));
     const dataToEncrypt = Buffer.concat([witness.getX().toArrayLike(Buffer, "be", 32), witness.getR().toArrayLike(Buffer, "be", 32)]);
     const encryptedBytes = aesCtrEncryptor.encrypt(dataToEncrypt);
     console.log("Succesfully encrypted");
-    const aesCtrDecryptor = new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(42));
+
+    // Alice does ECDH on her side, using her derived private key (index is public) and Bob's public key;
+    
+    const ecdhWitnessAlice = new ECDHWitness(AliceEphemeral.getPrivateKey(), AliceEphemeral.getGenerator())
+    const trueAgreedKeyFromAlice = ECDHProtocol.getAgreedKey(ecdhWitnessAlice, ecdhWitnessBob.getKey())
+    const restoredKey = trueAgreedKeyFromAlice.toArrayLike(Buffer, "be", 32);
+    assert(restoredKey.equals(originalKey), "Failed to restore a key");
+    
+    const aesCtrDecryptor = new aesjs.ModeOfOperation.ctr(restoredKey, new aesjs.Counter(42));
     const decryptedBytes = new Buffer.from(aesCtrDecryptor.decrypt(encryptedBytes));
     assert(decryptedBytes.equals(dataToEncrypt), "Failed to decrypt");
     console.log("Succesfully decrypted");
@@ -92,6 +119,9 @@ function transferProtocol() {
 
     assert(alicesOutput.equals(restoredOutput), "Failed to restore an output");
     console.log("Protocol is complete")
+
+    console.log("Public parameters: Bob's public key, Alice's master public key, index of derivation (random number by Bob), aes encrypted text, aes CTR IV");
+    console.log("Private parameters: Bob's private key, Alice's master private key");
 }
 
 transferProtocol();
