@@ -49,7 +49,7 @@ contract EfficientInnerProductVerifier {
         uint256 A,
         uint256 B
     ) public
-    // view 
+    view 
     returns (bool) {
         return verifyWithCustomParams(alt_bn128.G1Point(c_x, c_y), ls_x, ls_y, rs_x, rs_y, A, B, publicParameters.hs(), publicParameters.H());
     }

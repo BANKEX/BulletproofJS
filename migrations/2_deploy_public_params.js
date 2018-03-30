@@ -10,22 +10,12 @@ module.exports = async function(deployer, network, accounts) {
     (async () => {
         await deployer.deploy(PublicParameters, {from: operator})
         const publicParams = await PublicParameters.deployed();
-        for (let i = 0; i < M/8; i++) {
+        for (let i = 0; i < 1000; i++) {
             try{
-                const res = await publicParams.createGVector()
+                await publicParams.createGVector()
+                await publicParams.createHVector()
             } catch(err) {
-                console.log("G")
-                console.log("i = " + i);
-                console.log(err)
-            }
-        }
-        for (let i = 0; i < M/8; i++) {
-            try{
-                const res = await publicParams.createHVector()
-            } catch(err) {
-                console.log("H")
-                console.log("i = " + i);
-                console.log(err)
+                break
             }
         }
         console.log('Complete. Public parameters address: ' + publicParams.address);
@@ -37,13 +27,11 @@ module.exports = async function(deployer, network, accounts) {
 
         await deployer.deploy(RangeProofVerifier, publicParams.address, ipVerifier.address, {from: operator});
         const rangeProofVerifier = await RangeProofVerifier.deployed();    
-        for (let i = 0; i < M/8; i++) {
+        for (let i = 0; i < 100; i++) {
             try{
-                const res = await rangeProofVerifier.producePowers()
+                await rangeProofVerifier.producePowers()
             } catch(err) {
-                console.log("Error producing powers")
-                console.log("i = " + i);
-                console.log(err)
+                break
             }
         }
         

@@ -60,43 +60,17 @@ contract('RangeProofVerifier', async (accounts) => {
         assert(lastH.toString() == "" + M);
         let vectorsRef = parameters.getVectorBase().getGs().getVector();
         for (let i = 0; i < M; i++) {
-            try{
-                const x = await publicParams.gVector(2*i)
-                const y = await publicParams.gVector(2*i + 1)
-                const v = vectorsRef[i];
-                if (x.cmp(v.getX()) !== 0 || y.cmp(v.getY()) !== 0) {
-                    console.log("G vector")
-                    console.log("Ref x = " + v.getX().toString(16));
-                    console.log("Ref y = " + v.getY().toString(16));
-                    console.log("Created x = " + x.toString(16));
-                    console.log("Created y = " + y.toString(16));
-                    throw Error("Reference is different from created one");
-                }
-            } catch(err) {
-                console.log("G vector")
-                console.log("i = " + i);
-                console.log(err)
-            }
+            const x = await publicParams.gVector(2*i)
+            const y = await publicParams.gVector(2*i + 1)
+            const v = vectorsRef[i];
+            assert(x.cmp(v.getX()) === 0 && y.cmp(v.getY()) === 0, "Invalid G vector + " + i);
         }
         vectorsRef = parameters.getVectorBase().getHs().getVector();
         for (let i = 0; i < M; i++) {
-            try{
-                const x = await publicParams.hVector(2*i)
-                const y = await publicParams.hVector(2*i + 1)
-                const v = vectorsRef[i];
-                if (x.cmp(v.getX()) !== 0 || y.cmp(v.getY()) !== 0) {
-                    console.log("H vector")
-                    console.log("Ref x = " + v.getX().toString(16));
-                    console.log("Ref y = " + v.getY().toString(16));
-                    console.log("Created x = " + x.toString(16));
-                    console.log("Created y = " + y.toString(16));
-                    throw Error("Reference is different from created one");
-                }
-            } catch(err) {
-                console.log("H vector")
-                console.log("i = " + i);
-                console.log(err)
-            }
+            const x = await publicParams.hVector(2*i)
+            const y = await publicParams.hVector(2*i + 1)
+            const v = vectorsRef[i];
+            assert(x.cmp(v.getX()) === 0 && y.cmp(v.getY()) === 0, "Invalid H vector + " + i);
         }
 
         console.log('Complete. Public parameters address: ' + publicParams.address);

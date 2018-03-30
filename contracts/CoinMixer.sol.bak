@@ -1,38 +1,41 @@
 pragma solidity ^0.4.21;
-
+pragma experimental ABIEncoderV2;
 import "./RangeProofVerifier.sol";
 import "./alt_bn128.sol";
+import "./TokenProxy.sol";
 
 contract CoinMixer {
     using alt_bn128 for alt_bn128.G1Point;
+    mapping (uint256 => mapping (uint256 => alt_bn128.G1Point) ) public deposits;
+    // event DepositToMixer(uint256 indexed _X, uint256 indexed _Y, uint256 _amount);
+    event Transfer(uint256 indexed _index, uint256 indexed _X, uint256 indexed _Y);
+    event Withdraw(address indexed _address, uint256 _amount);
 
-    mapping (address => alt_bn128.G1Point) public deposits;
-    event DepositToMixer(address indexed _address, uint256 _amount);
-    event TransferByMixer(address indexed _address, uint256 _X, uint256 _Y);
-    event WithdrawFromMixer(address indexed _address, uint256 _amount);
+    PublicParameters public publicParameters;
     RangeProofVerifier public verifier;
+    TokenProxy public tokenProxy;
 
-    uint256 public constant m = 4;
-    uint256 public constant n = 2;
-
-    ERC20 public token;
-
-    alt_bn128.G1Point public peddersenBaseG;
-    alt_bn128.G1Point public peddersenBaseH;
+    uint256 public constant m = 16;
+    uint256 public constant n = 4;
 
     function CoinMixer(
-        uint256[4] coords, // [peddersenBaseG_x, peddersenBaseG_y, peddersenBaseH_x, peddersenBaseH_y]
-        RangeProofVerifier _verifier,
-        ERC20 _token) {
-        require(_verifier.n() == n);
-        require(_verifier.m() == m);
-        verifier = _verifier;
-        token = _token;
-        peddersenBaseG = alt_bn128.G1Point(coords[0], coords[1]);
-        peddersenBaseH = alt_bn128.G1Point(coords[2], coords[3]);
+        address _publicParameters,
+        address _rangeProofVerifier,
+        address _tokenProxy
+    ) public {
+        require(_publicParameters != address(0));
+        require(_rangeProofVerifier != address(0));
+        require(_tokenProxy != address(0));
+        publicParameters = PublicParameters(_publicParameters);
+        rangeProofVerifier = RangeProofVerifier(_rangeProofVerifier);
+        tokenProxy = TokenProxy(_tokenProxy);
+        require(m == publicParameters.m());
+        require(n == publicParameters.n());
+        require(m == rangeProofVerifier.m());
+        require(n == rangeProofVerifier.n());
     }
 
-    function deposit(uint256 value) external returns (bool) {
+    function deposit(uint256 value) public payable returns (bool) {
         require(deposits[msg.sender].eq(alt_bn128.G1Point(0, 0))); //TODO: move to lib
         require(token.transferFrom(msg.sender, this, value));
         deposits[msg.sender] = peddersenBaseG.mul(value);
