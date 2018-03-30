@@ -33,7 +33,7 @@ contract SchnorrVerifier {
         uint256 _e,
         alt_bn128.G1Point _generator,
         alt_bn128.G1Point _publicKey
-    ) internal
+    ) public
     view 
     returns (bool) {
         alt_bn128.G1Point memory r_V = _generator.mul(_s).add(_publicKey.mul(_e));

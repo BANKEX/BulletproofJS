@@ -24,7 +24,8 @@ library SafeMath {
   }
 }
 
-interface ERC20Token{
+interface ERC20Token {
+    function transfer(address _to, uint256 _value) external returns (bool);
     function transferFrom(address _from, address _to, uint256 _value) external returns (bool);
     function allowance(address _owner, address _spender) view external returns (uint256 remaining);
     function balanceOf(address _owner) view external returns (uint256 balance);
@@ -123,6 +124,11 @@ contract TokenProxy {
         });
         authorizedTokens[maxAssetID] = newToken;
         return true;
+    }
+
+    function getTokenInfo(uint256 _assetID) public view returns(address tokenAddress, bool isAuthorized) {
+        TokenInfo storage tokenInfo = authorizedTokens[_assetID];
+        return (tokenInfo.tokenAddress, tokenInfo.isAuthorized);
     }
 
 }

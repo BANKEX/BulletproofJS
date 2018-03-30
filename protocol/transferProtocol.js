@@ -79,9 +79,7 @@ function transferProtocol() {
     // Bob does ECDH on his side, using his private key and derived Alice's public key
 
     const ecdhWitnessBob = new ECDHWitness(BobEphemeral.getPrivateKey(), BobEphemeral.getGenerator())
-    const trueAgreedKey = ECDHProtocol.getAgreedKey(ecdhWitnessBob, AliceEphemeralPublicKey)
-
-
+    const trueAgreedKey = ECDHProtocol.getAgreedPoint(ecdhWitnessBob, AliceEphemeralPublicKey)
 
     const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
     const prover = new MultiRangeProofProver();
@@ -91,8 +89,9 @@ function transferProtocol() {
     assert(valid, "Range proof is not valid");
     console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
 
-    const originalKey = trueAgreedKey.toArrayLike(Buffer, "be", 32);
-    const aesCtrEncryptor = new aesjs.ModeOfOperation.ctr(originalKey, new aesjs.Counter(42));
+    const originalKey = trueAgreedKey.getX().toArrayLike(Buffer, "be", 32);
+    const originalIV = trueAgreedKey.getY().toArrayLike(Buffer, "be", 32).slice(16, 32);
+    const aesCtrEncryptor = new aesjs.ModeOfOperation.ctr(originalKey, originalIV);
     const dataToEncrypt = Buffer.concat([witness.getX().toArrayLike(Buffer, "be", 32), witness.getR().toArrayLike(Buffer, "be", 32)]);
     const encryptedBytes = aesCtrEncryptor.encrypt(dataToEncrypt);
     console.log("Succesfully encrypted");
@@ -100,11 +99,12 @@ function transferProtocol() {
     // Alice does ECDH on her side, using her derived private key (index is public) and Bob's public key;
     
     const ecdhWitnessAlice = new ECDHWitness(AliceEphemeral.getPrivateKey(), AliceEphemeral.getGenerator())
-    const trueAgreedKeyFromAlice = ECDHProtocol.getAgreedKey(ecdhWitnessAlice, ecdhWitnessBob.getKey())
-    const restoredKey = trueAgreedKeyFromAlice.toArrayLike(Buffer, "be", 32);
+    const trueAgreedKeyFromAlice = ECDHProtocol.getAgreedPoint(ecdhWitnessAlice, ecdhWitnessBob.getKey())
+    const restoredKey = trueAgreedKeyFromAlice.getX().toArrayLike(Buffer, "be", 32);
+    const restoredIV = trueAgreedKeyFromAlice.getY().toArrayLike(Buffer, "be", 32).slice(16,32);
     assert(restoredKey.equals(originalKey), "Failed to restore a key");
     
-    const aesCtrDecryptor = new aesjs.ModeOfOperation.ctr(restoredKey, new aesjs.Counter(42));
+    const aesCtrDecryptor = new aesjs.ModeOfOperation.ctr(restoredKey, restoredIV);
     const decryptedBytes = new Buffer.from(aesCtrDecryptor.decrypt(encryptedBytes));
     assert(decryptedBytes.equals(dataToEncrypt), "Failed to decrypt");
     console.log("Succesfully decrypted");

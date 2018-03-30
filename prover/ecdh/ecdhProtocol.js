@@ -6,6 +6,9 @@ var ECDHProtocol = /** @class */ (function () {
     ECDHProtocol.getAgreedKey = function (witness, otherSideKey) {
         return otherSideKey.mul(witness.getRandomness()).getX();
     };
+    ECDHProtocol.getAgreedPoint = function (witness, otherSideKey) {
+        return otherSideKey.mul(witness.getRandomness());
+    };
     return ECDHProtocol;
 }());
 exports.ECDHProtocol = ECDHProtocol;

@@ -7,4 +7,7 @@ export class ECDHProtocol {
     public static getAgreedKey(witness: ECDHWitness, otherSideKey: ECPoint ): BigInteger {
         return otherSideKey.mul(witness.getRandomness()).getX();
     }
+    public static getAgreedPoint(witness: ECDHWitness, otherSideKey: ECPoint ): ECPoint {
+        return otherSideKey.mul(witness.getRandomness());
+    }
 }
