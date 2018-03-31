@@ -17,7 +17,8 @@ export class SchnorrVerifier {
         const y_E = publicKey.mul(signature.getE());
         const r_V = g_S.add(y_E);
         const r_V_buffer = r_V.serialize(true);
-        const e_V_buffer = sha3(Buffer.concat([r_V_buffer, data]));
+        const pkBuffer = publicKey.serialize(true);
+        const e_V_buffer = sha3(Buffer.concat([r_V_buffer, pkBuffer, data]));
         let e_V = new BNCLASS(e_V_buffer, 16, "be");
         return e_V.cmp(signature.getE()) == 0;
     }

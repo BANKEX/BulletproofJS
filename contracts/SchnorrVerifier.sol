@@ -37,7 +37,7 @@ contract SchnorrVerifier {
     view 
     returns (bool) {
         alt_bn128.G1Point memory r_V = _generator.mul(_s).add(_publicKey.mul(_e));
-        uint256 e_V = uint256(keccak256(r_V.X, r_V.Y, _hash));
+        uint256 e_V = uint256(keccak256(r_V.X, r_V.Y, _publicKey.X, _publicKey.Y, _hash));
         return e_V == _e;
     }
 }

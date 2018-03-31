@@ -12,7 +12,8 @@ var SchnorrVerifier = /** @class */ (function () {
         var y_E = publicKey.mul(signature.getE());
         var r_V = g_S.add(y_E);
         var r_V_buffer = r_V.serialize(true);
-        var e_V_buffer = ethereumjs_util_1.sha3(buffer_1.Buffer.concat([r_V_buffer, data]));
+        var pkBuffer = publicKey.serialize(true);
+        var e_V_buffer = ethereumjs_util_1.sha3(buffer_1.Buffer.concat([r_V_buffer, pkBuffer, data]));
         var e_V = new bigInteger_1.BNCLASS(e_V_buffer, 16, "be");
         return e_V.cmp(signature.getE()) == 0;
     };

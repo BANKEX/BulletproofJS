@@ -15,7 +15,8 @@ export class SchnorrSigner {
     public sign(data: Buffer, witness: SchnorrWitness): SchnorrSignature {
         const X = witness.getR();
         const xBuffer = X.serialize(true);
-        const hash = sha3(Buffer.concat([xBuffer, data]));
+        const pkBuffer = witness.getPublicKey().serialize(true);
+        const hash = sha3(Buffer.concat([xBuffer, pkBuffer, data]));
         let e = new BNCLASS(hash, 16, "be");
         const x_E = witness.getPrivateKey().mul(e).umod(witness.getGenerator().curve.order);
         const s = witness.getRandomness().sub(x_E).umod(witness.getGenerator().curve.order);
