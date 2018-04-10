@@ -21,6 +21,7 @@ const M = 16;
 const N = 4;
 
 contract('RangeProofVerifier', async (accounts) => {
+    return
 
     var rangeProofVerifier;
     var publicParams;
@@ -160,6 +161,7 @@ contract('RangeProofVerifier', async (accounts) => {
             scalars,
             ls_coords,
             rs_coords);
+        assert(ethValidCall, "Range proof verification failed for Ethereum network")
         console.log("Ethereum proof is valid: " + ethValidCall + "\n");
         // let allEvents = rangeProofVerifier.allEvents({fromBlock: ethValid.receipt.blockNumber, toBlock: ethValid.receipt.blockNumber});
         // let get = util.promisify(allEvents.get.bind(allEvents))

@@ -64,16 +64,21 @@ contract TokenProxy {
         return true;
     }
 
-    function ProxyToken (address _supervisingContract) public {
+    function TokenProxy () public {
         //values are in natural format
-        require(_supervisingContract != address(0));
-        supervisingContract = _supervisingContract;
         TokenInfo memory ETHtoken = TokenInfo({
             tokenAddress: address(0),
             decimals: 18,
             isAuthorized: true
         });
         authorizedTokens[0] = ETHtoken;
+    }
+
+    function setSupervisingContract(address _supervisingContract) onlyOwner public returns (bool success) {
+        require(_supervisingContract != address(0));
+        require(supervisingContract == address(0));
+        supervisingContract = _supervisingContract;
+        return true;
     }
 
     function convertFromDeposit(uint256 _amount, uint256 _assetID) public view returns (uint256 convertedAmount) {

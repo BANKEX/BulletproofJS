@@ -34,8 +34,9 @@ export class ECCurve {
         this.zero = this.generator.sub(this.generator);
     }
 
-    public pointFromCoordinates(x: BigInteger, y: BigInteger) : any {
-        return this.curveRef.point(x, y, null, null);
+    public pointFromCoordinates(x: BigInteger, y: BigInteger) : ECPoint {
+        const pointRef = this.curveRef.curve.point(x, y);
+        return new ECPoint(pointRef, this);
     }
 
     public hash(input: Buffer) : Buffer {

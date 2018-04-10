@@ -22,7 +22,8 @@ var ECCurve = /** @class */ (function () {
         this.zero = this.generator.sub(this.generator);
     }
     ECCurve.prototype.pointFromCoordinates = function (x, y) {
-        return this.curveRef.point(x, y, null, null);
+        var pointRef = this.curveRef.curve.point(x, y);
+        return new ECPoint(pointRef, this);
     };
     ECCurve.prototype.hash = function (input) {
         return ethereumjs_util_1.sha3(input);

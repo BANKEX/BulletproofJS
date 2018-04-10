@@ -11,7 +11,8 @@ t.init()
 const M = 16;
 const N = 4;
 contract('PublicParameters', async (accounts) => {
-
+    return
+    
     var publicParams;
 
     const operator = accounts[0]

@@ -29,6 +29,10 @@ var PeddersenCommitment = /** @class */ (function () {
         var commitment = this.base.commit(this.x, this.r);
         return commitment;
     };
+    PeddersenCommitment.prototype.getBlinding = function () {
+        var p = this.base.getH().mul(this.r);
+        return p;
+    };
     return PeddersenCommitment;
 }());
 exports.PeddersenCommitment = PeddersenCommitment;

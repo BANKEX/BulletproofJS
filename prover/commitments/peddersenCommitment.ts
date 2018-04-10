@@ -41,4 +41,9 @@ export class PeddersenCommitment {
         const commitment = this.base.commit(this.x, this.r);
         return commitment;
     }
+
+    public getBlinding(): ECPoint {
+        const p = this.base.getH().mul(this.r);
+        return p;
+    }
 }

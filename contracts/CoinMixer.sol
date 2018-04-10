@@ -10,9 +10,12 @@ contract CoinMixer {
     using alt_bn128 for uint256;
 
     mapping(uint256 => mapping (uint256 => mapping (uint256 => alt_bn128.G1Point) ) ) public outputs;
-    event Deposit(uint256 indexed _X, uint256 indexed _Y, uint256 indexed _assetID, uint256 _amount);
+    event Deposit(uint256 indexed _X, uint256 indexed _Y, uint256 indexed _assetID, uint256 _convertedAmount);
     event Transfer(uint256 indexed _index, uint256 indexed _X, uint256 indexed _Y, uint256 _assetID, bytes _data);
     event Withdraw(address indexed _address, uint256 indexed _assetID, uint256 _amount);
+
+    event DebugEvent(uint256 indexed _0, bool indexed _1, bytes32 indexed _2);
+
     SchnorrVerifier public schnorrVerifier;
     PublicParameters public publicParameters;
     RangeProofVerifier public rangeProofVerifier;
@@ -57,13 +60,13 @@ contract CoinMixer {
         alt_bn128.G1Point memory blindingFactor = alt_bn128.G1Point(_blindingFactor[0], _blindingFactor[1]);
         output = output.add(blindingFactor);
         outputs[_assetID][_publicKey[0]][_publicKey[1]] = output;
-        emit Deposit(_publicKey[0], _publicKey[1], _assetID, _value);
+        emit Deposit(_publicKey[0], _publicKey[1], _assetID, convertedValue);
         return true;
     }
 
 
     function transfer(
-        uint256[2+4+2+4+1] _scalars, // [from_X, from_Y, to_0_X, to_0_Y, to_1_X, to_1_Y, index_0, index_1, schnorr_0_E, schnorr_0_S, schnorr_1_E, schnorr_1_S, assetID]
+        uint256[2+4+2+4+1] _scalars, // [from_X, from_Y, to_0_X, to_0_Y, to_1_X, to_1_Y, index_0, index_1, schnorr_0_S, schnorr_0_E, schnorr_1_S, schnorr_1_E, assetID]
         bytes _exchangeData0,
         bytes _exchangeData1,
         //range proofs
@@ -73,20 +76,27 @@ contract CoinMixer {
         uint256[2*2*n] rs_coords  // 2 * n
     ) public returns (bool success) {
         alt_bn128.G1Point[] memory reusablePoints = new alt_bn128.G1Point[](3);
-        reusablePoints[0] = outputs[_scalars[12]][_scalars[0]][_scalars[1]];
+        reusablePoints[0] = outputs[_scalars[12]][_scalars[0]][_scalars[1]]; // old output
         bytes32 hashToVerify = keccak256(reusablePoints[0].X, reusablePoints[0].Y);
         reusablePoints[1] = publicParameters.generator(); //signature generator
         reusablePoints[2] = alt_bn128.G1Point(_scalars[0], _scalars[1]); //public key associated with an output
         require(schnorrVerifier.verifySignatureAsPoints(hashToVerify, _scalars[8], _scalars[9], reusablePoints[1], reusablePoints[2]));
 
         require(verifyRangeProofForSplits(coords, scalars, ls_coords, rs_coords));
+        // emit DebugEvent(reusablePoints[0].X, true, bytes32(0));
+        // emit DebugEvent(reusablePoints[0].Y, true, bytes32(0));
 
-        reusablePoints[1] = alt_bn128.G1Point(coords[0], coords[1]);
-        reusablePoints[2] = alt_bn128.G1Point(coords[10], coords[11]);
-        reusablePoints[0] = reusablePoints[0].add(reusablePoints[1].neg()).add(reusablePoints[2].neg());
+        reusablePoints[1] = alt_bn128.G1Point(coords[0], coords[1]); // commitment to output 0
+        reusablePoints[2] = alt_bn128.G1Point(coords[10], coords[11]); // commitment to output 1
+        reusablePoints[0] = reusablePoints[0].add(reusablePoints[1].neg()).add(reusablePoints[2].neg()); // should be in a form r*H
         hashToVerify = keccak256(reusablePoints[0].X, reusablePoints[0].Y);
         require(schnorrVerifier.verifySignatureAsPoints(hashToVerify, _scalars[10], _scalars[11], publicParameters.H(), reusablePoints[0]));
-        
+        // emit DebugEvent(reusablePoints[1].X, true, hashToVerify);
+        // emit DebugEvent(reusablePoints[1].Y, true, hashToVerify);
+        // emit DebugEvent(reusablePoints[1].X, true, hashToVerify);
+        // emit DebugEvent(reusablePoints[1].Y, true, hashToVerify);
+        // emit DebugEvent(reusablePoints[2].X, true, hashToVerify);
+        // emit DebugEvent(reusablePoints[2].Y, true, hashToVerify);
         outputs[_scalars[12]][_scalars[2]][_scalars[3]] = reusablePoints[1];
         emit Transfer(_scalars[6], _scalars[2], _scalars[3], _scalars[12], _exchangeData0);
 
@@ -109,8 +119,8 @@ contract CoinMixer {
             uint256[5] memory scratchForScalars;
             uint256[2*n] memory scratchForLs;
             uint256[2*n] memory scratchForRs;
-            for (uint8 i = 0; i < 2; i++) {
-                uint8 j = 0;
+            for (uint256 i = 0; i < 2; i++) {
+                uint256 j = 0;
                 for (j = 0; j < scratchForCoords.length; j++) {
                     scratchForCoords[j] = coords[i*10 + j];
                 }
@@ -124,6 +134,7 @@ contract CoinMixer {
                     scratchForRs[j] = rs_coords[i*2*n + j];
                 }
                 if (!rangeProofVerifier.verify(scratchForCoords, scratchForScalars, scratchForLs, scratchForRs)) {
+                    // emit DebugEvent(i, false, bytes32(0));
                     return false;
                 }
             }
@@ -136,6 +147,7 @@ contract CoinMixer {
         require(input.eq(output));
         uint256 convertedValue = tokenProxy.convertForWithdraw(_value, _assetID);
         delete outputs[_assetID][_publicKey[0]][_publicKey[1]];
+        emit Withdraw(msg.sender, _assetID, convertedValue);
         if (_assetID != 0) {
             address tokenAddress;
             bool isAuthorized;
@@ -146,7 +158,6 @@ contract CoinMixer {
         } else {
             msg.sender.transfer(convertedValue);
         }
-        emit Withdraw(msg.sender, _assetID, convertedValue);
         return true;
 
     }

@@ -18,7 +18,8 @@ const M = 16;
 const N = 4;
 
 contract('SchnorrVerifier', async (accounts) => {
-
+    return 
+    
     var schnorrVerifier;
     const operator = accounts[0]
 
