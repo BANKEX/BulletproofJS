@@ -115,20 +115,24 @@ export class FieldVector {
 
 
     static pow(k: BigInteger, n: number, q: BigInteger) : FieldVector {
+        let redContext = BNCLASS.red(q);
         let res = [] as BigInteger[];
-        let element = toBI(1, 10);
+        let element = toBI(1, 10).toRed(redContext);
+        let k_red = k.toRed(redContext);
         res.push(element)
         for (let i = 1; i < n; i++) {
-            element = element.mul(k);
-            res.push(element);
+            element = element.redMul(k_red);
+            res.push(element.fromRed());
         }
         return new FieldVector(res, q);
     }
 
     static fill(k: BigInteger, n: number, q: BigInteger) : FieldVector {
+        let redContext = BNCLASS.red(q);
         let res = [] as BigInteger[];
+        let k_red = k.toRed(redContext);
         for (let i = 0; i < n; i++) {
-            res.push(k);
+            res.push(k_red.fromRed());
         }
         return new FieldVector(res, q);
     }

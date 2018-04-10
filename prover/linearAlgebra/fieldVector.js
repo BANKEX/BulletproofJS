@@ -97,19 +97,23 @@ var FieldVector = /** @class */ (function () {
         return this.a;
     };
     FieldVector.pow = function (k, n, q) {
+        var redContext = bigInteger_1.BNCLASS.red(q);
         var res = [];
-        var element = bigInteger_1.toBI(1, 10);
+        var element = bigInteger_1.toBI(1, 10).toRed(redContext);
+        var k_red = k.toRed(redContext);
         res.push(element);
         for (var i = 1; i < n; i++) {
-            element = element.mul(k);
-            res.push(element);
+            element = element.redMul(k_red);
+            res.push(element.fromRed());
         }
         return new FieldVector(res, q);
     };
     FieldVector.fill = function (k, n, q) {
+        var redContext = bigInteger_1.BNCLASS.red(q);
         var res = [];
+        var k_red = k.toRed(redContext);
         for (var i = 0; i < n; i++) {
-            res.push(k);
+            res.push(k_red.fromRed());
         }
         return new FieldVector(res, q);
     };
