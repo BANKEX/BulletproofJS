@@ -144,16 +144,16 @@ contract('Protocol test', async (accounts) => {
         assert(AliceEphemeral.getPublicKey().equals(AliceEphemeralPublicKey), 'BIP32 failed');
 
         const bobsDepositInEth = new BN(10);
-        const bobsBlinding = ProofUtils.randomNumber();
-        const blinding = parameters.getBase().getH().mul(bobsBlinding)
+        const bobsBlinding = new BN(0);
+        // const blinding = parameters.getBase().getH().mul(bobsBlinding)
         const TEN = new BN(10);
         const assetID = new BN(0);
         const value = bobsDepositInEth.mul(TEN.pow(new BN(18)));
         
-        const depositGasEstimate = await coinMixer.deposit.estimateGas([assetID], [value], [blinding.getX(), blinding.getY()], [BobEphemeral.getPublicKey().getX(), BobEphemeral.getPublicKey().getY()], {from: operator, value: value})
+        const depositGasEstimate = await coinMixer.deposit.estimateGas([assetID], [value], [BobEphemeral.getPublicKey().getX(), BobEphemeral.getPublicKey().getY()], {from: operator, value: value})
         console.log("Deposit requires " + depositGasEstimate + " gas")
         
-        const depositResult = await coinMixer.deposit([assetID], [value], [blinding.getX(), blinding.getY()], [BobEphemeral.getPublicKey().getX(), BobEphemeral.getPublicKey().getY()], {from: operator, value: value})
+        const depositResult = await coinMixer.deposit([assetID], [value], [BobEphemeral.getPublicKey().getX(), BobEphemeral.getPublicKey().getY()], {from: operator, value: value})
         let allEvents = coinMixer.allEvents({fromBlock: depositResult.receipt.blockNumber, toBlock: depositResult.receipt.blockNumber});
         let get = util.promisify(allEvents.get.bind(allEvents))
         let evs = await get()

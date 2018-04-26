@@ -13,7 +13,7 @@ contract CoinMixer {
     event Deposit(uint256 indexed _X, uint256 indexed _Y, uint256 indexed _assetID, uint256 _convertedAmount);
     event Transfer(uint256 indexed _index, uint256 indexed _X, uint256 indexed _Y, uint256 _assetID, bytes _data);
     event Withdraw(address indexed _address, uint256 indexed _assetID, uint256 _amount);
-
+    event Merge(uint256 indexed _assetID, uint256 indexed _publicKey0_X, uint256 _publicKey0_Y, uint256 indexed _publicKey1_X, uint256 _publicKey1_Y, uint256 _newPublicKey_X, uint256 _newPublicKey_Y);
     event DebugEvent(uint256 indexed _0, bool indexed _1, bytes32 indexed _2);
 
     SchnorrVerifier public schnorrVerifier;
@@ -44,7 +44,7 @@ contract CoinMixer {
         require(n == rangeProofVerifier.n());
     }
 
-    function deposit(uint256 _assetID, uint256 _value, uint256[2] _blindingFactor, uint256[2] _publicKey) public payable returns (bool) {
+    function deposit(uint256 _assetID, uint256 _value, uint256[2] _publicKey) public payable returns (bool) {
         require(_assetID == 0 || msg.value == 0);
         require(outputs[_assetID][_publicKey[0]][_publicKey[1]].eq(alt_bn128.G1Point(0, 0)));
         if (_assetID != 0) {
@@ -56,9 +56,10 @@ contract CoinMixer {
             require(token.transferFrom(msg.sender, this, _value));
         }
         uint256 convertedValue = tokenProxy.convertFromDeposit(_value, _assetID);
+        require(convertedValue < 2**m);
         alt_bn128.G1Point memory output = publicParameters.G().mul(convertedValue);
-        alt_bn128.G1Point memory blindingFactor = alt_bn128.G1Point(_blindingFactor[0], _blindingFactor[1]);
-        output = output.add(blindingFactor);
+        // alt_bn128.G1Point memory blindingFactor = alt_bn128.G1Point(_blindingFactor[0], _blindingFactor[1]);
+        // output = output.add(blindingFactor);
         outputs[_assetID][_publicKey[0]][_publicKey[1]] = output;
         emit Deposit(_publicKey[0], _publicKey[1], _assetID, convertedValue);
         return true;
@@ -83,20 +84,11 @@ contract CoinMixer {
         require(schnorrVerifier.verifySignatureAsPoints(hashToVerify, _scalars[8], _scalars[9], reusablePoints[1], reusablePoints[2]));
 
         require(verifyRangeProofForSplits(coords, scalars, ls_coords, rs_coords));
-        // emit DebugEvent(reusablePoints[0].X, true, bytes32(0));
-        // emit DebugEvent(reusablePoints[0].Y, true, bytes32(0));
-
         reusablePoints[1] = alt_bn128.G1Point(coords[0], coords[1]); // commitment to output 0
         reusablePoints[2] = alt_bn128.G1Point(coords[10], coords[11]); // commitment to output 1
         reusablePoints[0] = reusablePoints[0].add(reusablePoints[1].neg()).add(reusablePoints[2].neg()); // should be in a form r*H
         hashToVerify = keccak256(reusablePoints[0].X, reusablePoints[0].Y);
         require(schnorrVerifier.verifySignatureAsPoints(hashToVerify, _scalars[10], _scalars[11], publicParameters.H(), reusablePoints[0]));
-        // emit DebugEvent(reusablePoints[1].X, true, hashToVerify);
-        // emit DebugEvent(reusablePoints[1].Y, true, hashToVerify);
-        // emit DebugEvent(reusablePoints[1].X, true, hashToVerify);
-        // emit DebugEvent(reusablePoints[1].Y, true, hashToVerify);
-        // emit DebugEvent(reusablePoints[2].X, true, hashToVerify);
-        // emit DebugEvent(reusablePoints[2].Y, true, hashToVerify);
         outputs[_scalars[12]][_scalars[2]][_scalars[3]] = reusablePoints[1];
         emit Transfer(_scalars[6], _scalars[2], _scalars[3], _scalars[12], _exchangeData0);
 
@@ -104,6 +96,33 @@ contract CoinMixer {
         emit Transfer(_scalars[7], _scalars[4], _scalars[5], _scalars[12], _exchangeData1);
 
         delete outputs[_scalars[12]][_scalars[0]][_scalars[1]];
+        return true;
+    }
+
+    function merge(
+        uint256 _assetID, uint256[2] _publicKey0, uint256[2] _publicKey1,
+        uint256[2] _signature0,
+        uint256[2] _signature1,
+        uint256[2] _newPublicKey) public returns (bool success) {
+        alt_bn128.G1Point[] memory reusablePoints = new alt_bn128.G1Point[](3);
+
+        reusablePoints[0] = outputs[_assetID][_publicKey0[0]][_publicKey0[1]]; // old output 0
+        bytes32 hashToVerify = keccak256(reusablePoints[0].X, reusablePoints[0].Y);
+        reusablePoints[1] = alt_bn128.G1Point(_publicKey0[0], _publicKey0[1]); //public key associated with an output
+        require(schnorrVerifier.verifySignatureAsPoints(hashToVerify, _signature0[0], _signature0[1], publicParameters.generator(), reusablePoints[1]));
+
+        reusablePoints[2] = outputs[_assetID][_publicKey1[0]][_publicKey1[1]]; // old output 0
+        hashToVerify = keccak256(reusablePoints[2].X, reusablePoints[2].Y);
+        reusablePoints[1] = alt_bn128.G1Point(_publicKey1[0], _publicKey1[1]); //public key associated with an output
+        require(schnorrVerifier.verifySignatureAsPoints(hashToVerify, _signature1[0], _signature1[1], publicParameters.generator(), reusablePoints[1]));
+
+        delete outputs[_assetID][_publicKey0[0]][_publicKey0[1]]; 
+        delete outputs[_assetID][_publicKey1[0]][_publicKey1[1]];
+        reusablePoints[1] = reusablePoints[0].add(reusablePoints[2]);
+        outputs[_assetID][_newPublicKey[0]][_newPublicKey[1]] = reusablePoints[1];
+
+        emit Merge(_assetID, _publicKey0[0],_publicKey0[1],_publicKey1[0],_publicKey1[1], _newPublicKey[0], _newPublicKey[1]);
+
         return true;
     }
 
