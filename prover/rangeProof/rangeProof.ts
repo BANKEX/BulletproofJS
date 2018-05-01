@@ -17,7 +17,7 @@ export class RangeProof {
     public t: BigInteger;
     public productProof: InnerProductProof;
 
-    constructor(aI: ECPoint, s: ECPoint, tCommits: GeneratorVector, tauX: BigInteger,mu: BigInteger, t: BigInteger, productProof: InnerProductProof) {
+    constructor(aI: ECPoint, s: ECPoint, tCommits: GeneratorVector, tauX: BigInteger, mu: BigInteger, t: BigInteger, productProof: InnerProductProof) {
         this.aI = aI;
         this.s = s;
         this.tCommits = tCommits;

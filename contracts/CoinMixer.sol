@@ -121,7 +121,7 @@ contract CoinMixer {
         reusablePoints[1] = reusablePoints[0].add(reusablePoints[2]);
         outputs[_assetID][_newPublicKey[0]][_newPublicKey[1]] = reusablePoints[1];
 
-        emit Merge(_assetID, _publicKey0[0],_publicKey0[1],_publicKey1[0],_publicKey1[1], _newPublicKey[0], _newPublicKey[1]);
+        emit Merge(_assetID, _publicKey0[0], _publicKey0[1], _publicKey1[0], _publicKey1[1], _newPublicKey[0], _newPublicKey[1]);
 
         return true;
     }
