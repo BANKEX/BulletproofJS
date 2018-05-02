@@ -17,7 +17,7 @@ contract MultiRangeProofVerifier {
     // uint256[m] public twos;
     // uint256 public lastPowerCreated = 0;
 
-    function RangeProofVerifier(
+    constructor(
         address _publicParameters,
         address _ipVerifier
     ) public {
@@ -85,7 +85,8 @@ contract MultiRangeProofVerifier {
         }
         ipProof.a = scalars[3];
         ipProof.b = scalars[4];
-        return verifyInternal(input, multiRangeProof);
+        uint256 yPrecomputed = uint256(keccak256(commitments, multiRangeProof.aI.X, multiRangeProof.aI.Y, multiRangeProof.s.X, multiRangeProof.s.Y)).mod();
+        return verifyInternal(yPrecomputed, input, multiRangeProof);
     }
 
     struct MultiRangeProof {
@@ -127,6 +128,7 @@ contract MultiRangeProofVerifier {
     }
 
     function verifyInternal(
+        uint256 yPrecomputed,
         alt_bn128.G1Point[] input,
         MultiRangeProof proof
     ) internal 
@@ -134,7 +136,7 @@ contract MultiRangeProofVerifier {
     returns (bool) {
         uint256 bitsPerNumber = m / input.length;
         Board memory b;
-        b.y = uint256(keccak256(input, proof.aI.X, proof.aI.Y, proof.s.X, proof.s.Y)).mod();
+        b.y = yPrecomputed;
         b.ys = powers(b.y);
         b.z = uint256(keccak256(b.y)).mod();
         b.zs = powers(b.z, 2, input.length);
@@ -142,7 +144,6 @@ contract MultiRangeProofVerifier {
         // b.zSquared = b.z.mul(b.z);
         // b.zCubed = b.zSquared.mul(b.z);
         b.twoTimesZSquared = timesAndConcat(b.twos, b.zs);
-
         // const zSum = zs.sum().mul(z).umod(q);
         b.zSum = sumScalars(b.zs).mul(b.z);
         // const k = ys.sum().mul(z.sub(zs.get(0))).sub(zSum.shln(bitsPerNumber).sub(zSum)).umod(q);
@@ -151,6 +152,7 @@ contract MultiRangeProofVerifier {
         b.x = uint256(keccak256(proof.tCommits[0].X, proof.tCommits[0].Y, proof.tCommits[1].X, proof.tCommits[1].Y)).mod();
 
         // const lhs = base.commit(t, tauX);
+        // return true;
         b.lhs = publicParameters.G().mul(proof.t).add(publicParameters.H().mul(proof.tauX));
 
         // const rhs = tCommits.commit([x, x.pow(TWO)])
@@ -161,6 +163,7 @@ contract MultiRangeProofVerifier {
         }
         // .add(base.commit(k, ZERO));
         b.rhs = b.rhs.add(publicParameters.G().mul(b.k));
+        
         if (!b.rhs.eq(b.lhs)) {
             return false;
         }
@@ -249,27 +252,29 @@ contract MultiRangeProofVerifier {
         }
     }
 
-    function powers(uint256 base, uint256 firstPower, uint256 modulus, uint256 numberOfPowers) internal pure returns (uint256[] powers) {
-        uint256[] memory pwrs = new uint256[](numberOfPowers);
-        pwrs[0] = 1;
-        uint256 i = 0;
-        for (i = 0; i < firstPower; i++) {
-            pwrs[0] = mulmod(pwrs[0], base, modulus);
-        }
-        for (i = 1; i < m; i++) {
-            pwrs[i] = mulmod(pwrs[i-1], base, modulus);
-        }
-        return pwrs;
-    }
+    // function powers(uint256 base, uint256 firstPower, uint256 modulus, uint256 numberOfPowers) internal pure returns (uint256[] powers) {
+    //     uint256[] memory pwrs = new uint256[](numberOfPowers);
+    //     pwrs[0] = 1;
+    //     uint256 i = 0;
+    //     for (i = 0; i < firstPower; i++) {
+    //         pwrs[0] = mulmod(pwrs[0], base, modulus);
+    //     }
+    //     for (i = 1; i < numberOfPowers; i++) {
+    //         pwrs[i] = mulmod(pwrs[i-1], base, modulus);
+    //     }
+    //     return pwrs;
+    // }
 
     function powers(uint256 base, uint256 firstPower, uint256 numberOfPowers) internal pure returns (uint256[] powers) {
         uint256[] memory pwrs = new uint256[](numberOfPowers);
         pwrs[0] = 1;
         uint256 i = 0;
-        for (i = 0; i < firstPower; i++) {
-            pwrs[0] = pwrs[0].mul(base);
-        }
-        for (i = 1; i < m; i++) {
+        if (firstPower != 0) {
+            for (i = 0; i < firstPower; i++) {
+                pwrs[0] = pwrs[0].mul(base);
+            }
+        } 
+        for (i = 1; i < numberOfPowers; i++) {
             pwrs[i] = pwrs[i-1].mul(base);
         }
         return pwrs;
@@ -281,11 +286,11 @@ contract MultiRangeProofVerifier {
         }
     }
 
-    function timesAndConcat(uint256[] v, uint256[] xs) internal pure returns(uint256[m] result) {
+    function timesAndConcat(uint256[] v, uint256[] xs) internal pure returns(uint256[m] result) { //twos, zs. twos.times(z).reduce()
         uint256 vLength = v.length;
-        for (uint256 i = 0; i < vLength; i++) {
-            for (uint256 j = 0; j < xs.length; j++) {
-                result[i*vLength + j] = v[i].mul(xs[j]);
+        for (uint256 i = 0; i < xs.length; i++) {
+            for (uint256 j = 0; j < vLength; j++) {
+                result[i*vLength + j] = v[j].mul(xs[i]);
             }
         }
     }

@@ -8,7 +8,7 @@ contract SchnorrVerifier {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
 
-    function SchnorrVerifier() public {
+    constructor() public {
 
     }
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 
 import {alt_bn128} from "./alt_bn128.sol";
@@ -37,7 +37,7 @@ contract PublicParameters {
     uint256 public lastGcreated = 0;
     uint256 public lastHcreated = 0;
 
-    function PublicParameters() public {
+    constructor() public {
         signatureGenerator = signaturePublicGenerator();
         baseG = peddersenBaseG();
         baseH = peddersenBaseH();

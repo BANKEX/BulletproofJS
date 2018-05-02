@@ -17,7 +17,7 @@ contract RangeProofVerifier {
     uint256[m] public twos;
     uint256 public lastPowerCreated = 0;
 
-    function RangeProofVerifier(
+    constructor (
         address _publicParameters,
         address _ipVerifier
     ) public {

@@ -1,16 +1,17 @@
 const PublicParameters = artifacts.require("PublicParameters.sol");
 const EfficientInnerProductVerifier = artifacts.require("EfficientInnerProductVerifier.sol");
-const EthereumRangeProofVerifier = artifacts.require("RangeProofVerifier.sol");
+const EthereumRangeProofVerifier = artifacts.require("MultiRangeProofVerifier.sol");
 const util = require("util");
 
 const secureRandom = require("secure-random")
 const BN = require("bn.js")
 const ethUtil = require("ethereumjs-util");
 const assert = require("assert");
-const {RangeProofProver} = require("../prover/rangeProof/rangeProofProver")
-const {RangeProofVerifier} = require("../prover/rangeProof/rangeProofVerifier")
+const {MultiRangeProofProver} = require("../prover/multiRangeProof/multiRangeProofProver")
+const {MultiRangeProofVerifier} = require("../prover/multiRangeProof/multiRangeProofVerifier")
 const {GeneratorParams} = require("../prover/rangeProof/generatorParams")
 const {PeddersenCommitment} = require("../prover/commitments/peddersenCommitment")
+const {GeneratorVector} = require("../prover/linearAlgebra/generatorVector")
 const {ECCurve} = require("../prover/curve/curve")
 const {ProofUtils} = require("../prover/util/proofUtil")
 const t = require('truffle-test-utils')
@@ -20,8 +21,8 @@ t.init()
 const M = 16;
 const N = 4;
 
-contract('RangeProofVerifier', async (accounts) => {
-    return
+contract('MultiRangeProofVerifier', async (accounts) => {
+    // return
 
     var rangeProofVerifier;
     var publicParams;
@@ -31,9 +32,6 @@ contract('RangeProofVerifier', async (accounts) => {
     beforeEach(async () => {
         const group = new ECCurve("bn256");
         const parameters = GeneratorParams.generateParams(M, group);
-        // const p = await PublicParameters.deployed();
-        // const i = await EfficientInnerProductVerifier.deployed();
-        // const r = await RangeProofVerifier.deployed();
         publicParams = await PublicParameters.new({from: operator})
 
         const g = parameters.getBase().g;
@@ -81,52 +79,57 @@ contract('RangeProofVerifier', async (accounts) => {
         console.log('Complete. Inner product proof verifier address: ' + ipVerifier.address);
 
         rangeProofVerifier = await EthereumRangeProofVerifier.new(publicParams.address, ipVerifier.address, {from: operator});
-        for (let i = 0; i < 100; i++) {
-            try{
-                await rangeProofVerifier.producePowers()
-            } catch(err) {
-                break
-            }
-        }
-        const lastTwo = await rangeProofVerifier.lastPowerCreated();
-        assert(lastTwo.toString() == "" + M, "Failed to create powers");
+        // for (let i = 0; i < 100; i++) {
+        //     try{
+        //         await rangeProofVerifier.producePowers()
+        //     } catch(err) {
+        //         break
+        //     }
+        // }
+        // const lastTwo = await rangeProofVerifier.lastPowerCreated();
+        // assert(lastTwo.toString() == "" + M, "Failed to create powers");
 
-        const TWO = new BN(2);
-        for (let i = 0; i < M; i++) {
-            const p = await rangeProofVerifier.twos(i)
-            const I = new BN(i);
-            const expe = TWO.pow(I).umod(group.primeFieldSize);
-            assert(p.cmp(expe) === 0, "Created power is invalid")
-        }
+        // const TWO = new BN(2);
+        // for (let i = 0; i < M; i++) {
+        //     const p = await rangeProofVerifier.twos(i)
+        //     const I = new BN(i);
+        //     const expe = TWO.pow(I).umod(group.primeFieldSize);
+        //     assert(p.cmp(expe) === 0, "Created power is invalid")
+        // }
 
     })
 
     it('check single proof', async () => {
-        const group = new ECCurve("bn256")
-        const number = new BN(7);
-        const randomness = ProofUtils.randomNumber();
-        const q = group.order;
-        const parameters = GeneratorParams.generateParams(M, group);
-        const v = parameters.getBase().commit(number, randomness);
-        const witness = new PeddersenCommitment(parameters.getBase(), number, randomness);
-        const prover = new RangeProofProver();
-        const proof = prover.generateProof(parameters, v, witness);
+    const group = new ECCurve("bn256")
+    const total = new BN(10);
+    const number = new BN(7);
+    const change = new BN(3);
 
-        
-        const verifier = new RangeProofVerifier();
-        console.log("For one proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
+    const q = group.order;
+    console.log("Group order = " + q.toString(10) + "\n");
+    const parameters = GeneratorParams.generateParams(M, group);
+    const witness = new PeddersenCommitment(parameters.getBase(), number, ProofUtils.randomNumber());
+    const witness_change = new PeddersenCommitment(parameters.getBase(), change, ProofUtils.randomNumber());
+    const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
+    const prover = new MultiRangeProofProver();
+    const proof = prover.generateProof(parameters, commitments, [witness, witness_change]);
+    const verifier = new MultiRangeProofVerifier();
+    const valid = verifier.verify(parameters, commitments, proof);
+    console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
+    console.log("Multi range proof is " + valid + "\n");
 
-        const valid = verifier.verify(parameters, v, proof);
-        console.log("Proof is valid: " + valid + "\n");
-
-        // uint256[10] coords, // [input_x, input_y, A_x, A_y, S_x, S_y, commits[0]_x, commits[0]_y, commits[1]_x, commits[1]_y]
+        // uint256[] commitments, // multiple of 2 items of Peddersen commitments
+        // uint256[8] coords, // [A_x, A_y, S_x, S_y, commits[0]_x, commits[0]_y, commits[1]_x, commits[1]_y]
         // uint256[5] scalars, // [tauX, mu, t, a, b]
         // uint256[2*n] ls_coords, // 2 * n
         // uint256[2*n] rs_coords  // 2 * n
+        const comms = [];
+        comms.push(commitments.getVector()[0].getX())
+        comms.push(commitments.getVector()[0].getY())
+        comms.push(commitments.getVector()[1].getX())
+        comms.push(commitments.getVector()[1].getY())
 
         const coords = [];
-        coords.push(v.getX()) //commitment itself
-        coords.push(v.getY())
         coords.push(proof.getaI().getX())
         coords.push(proof.getaI().getY())
         coords.push(proof.getS().getX())
@@ -147,31 +150,17 @@ contract('RangeProofVerifier', async (accounts) => {
             rs_coords.push(R.getY())
         }
         const scalars = [proof.getTauX(), proof.getMu(), proof.getT(), proof.getProductProof().getA(), proof.getProductProof().getB()]
-        const ethValid = await rangeProofVerifier.verify(coords,
+        const ethValid = await rangeProofVerifier.verify(comms, coords,
         scalars,
         ls_coords,
         rs_coords);
-        const ZERO = new BN(0);
-        for (const arr of [coords, scalars, ls_coords, rs_coords]) {
-            arr.map((v) => {
-                assert(v.cmp(ZERO) >= 0, "One of the items is less than zero");
-            })
-        }
-        const gasEstimate = await rangeProofVerifier.verify.estimateGas(coords,
-            scalars,
-            ls_coords,
-            rs_coords);
 
-        console.log("Single proof gas estimate = " + gasEstimate)
-        const ethValidCall = await rangeProofVerifier.verify.call(coords,
-            scalars,
-            ls_coords,
-            rs_coords);
-        assert(ethValidCall, "Range proof verification failed for Ethereum network")
-        console.log("Ethereum proof is valid: " + ethValidCall + "\n");
         // let allEvents = rangeProofVerifier.allEvents({fromBlock: ethValid.receipt.blockNumber, toBlock: ethValid.receipt.blockNumber});
         // let get = util.promisify(allEvents.get.bind(allEvents))
         // let evs = await get()
+        // evs.map((v) => {
+        //     console.log(v.args._i.toString(16));
+        // })
         // // console.log(JSON.stringify(evs));
         // // console.log(evs[0].args._i.toString(16));
         // // console.log(evs[1].args._i.toString(16));
@@ -185,5 +174,27 @@ contract('RangeProofVerifier', async (accounts) => {
         //     console.log(v.args._i.toString(16));
         // })
         // console.log("Ethereum proof is valid: " + ethValid + "\n");
+
+        const ZERO = new BN(0);
+        for (const arr of [coords, scalars, ls_coords, rs_coords]) {
+            arr.map((v) => {
+                assert(v.cmp(ZERO) >= 0, "One of the items is less than zero");
+            })
+        }
+        const gasEstimate = await rangeProofVerifier.verify.estimateGas(comms, coords,
+            scalars,
+            ls_coords,
+            rs_coords);
+
+        console.log("Aggregated proof gas estimate = " + gasEstimate)
+
+        const ethValidCall = await rangeProofVerifier.verify.call(comms, coords,
+            scalars,
+            ls_coords,
+            rs_coords);
+        assert(ethValidCall, "Multi range proof verification failed for Ethereum network")
+        console.log("Ethereum proof is valid: " + ethValidCall + "\n");
+        
+
     })
 })

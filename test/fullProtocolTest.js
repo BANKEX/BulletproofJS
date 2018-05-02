@@ -30,7 +30,7 @@ const M = 16;
 const N = 4;
 
 contract('Protocol test', async (accounts) => {
-    // return
+    return
     var rangeProofVerifier;
     var publicParams;
     var ipVerifier;

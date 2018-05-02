@@ -19,7 +19,8 @@ function testSoundness() {
     const total = new BN(10);
     const number = new BN(7);
     const change = new BN(3);
-
+    const extra = new BN(1);
+    const zero = new BN(0);
     const q = group.order;
     console.log("Group order = " + q.toString(10) + "\n");
     const parameters = GeneratorParams.generateParams(256, group);
@@ -39,9 +40,11 @@ function testSoundness() {
     // })
     const witness = new PeddersenCommitment(parameters.getBase(), number, ProofUtils.randomNumber());
     const witness_change = new PeddersenCommitment(parameters.getBase(), change, ProofUtils.randomNumber());
-    const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
+    const witness_extra = new PeddersenCommitment(parameters.getBase(), extra, ProofUtils.randomNumber());
+    const witness_zero = new PeddersenCommitment(parameters.getBase(), zero, ProofUtils.randomNumber());
+    const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment(), witness_extra.getCommitment(), witness_zero.getCommitment()], group)
     const prover = new MultiRangeProofProver();
-    const proof = prover.generateProof(parameters, commitments, [witness, witness_change]);
+    const proof = prover.generateProof(parameters, commitments, [witness, witness_change, witness_extra, witness_zero]);
     const verifier = new MultiRangeProofVerifier();
     let valid = verifier.verify(parameters, commitments, proof);
     console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());

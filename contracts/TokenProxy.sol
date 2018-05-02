@@ -64,7 +64,7 @@ contract TokenProxy {
         return true;
     }
 
-    function TokenProxy () public {
+    constructor() public {
         //values are in natural format
         TokenInfo memory ETHtoken = TokenInfo({
             tokenAddress: address(0),
