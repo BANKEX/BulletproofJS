@@ -4,20 +4,6 @@ pragma experimental ABIEncoderV2;
 import {alt_bn128} from "./alt_bn128.sol";
 import {Conversion} from "./Conversion.sol";
 
-// m = 256 implied in interface
-
-// interface PublicParametersInterface {
-//     function m() external view returns (uint256 mValue);
-//     function n() external view returns (uint256 nValue);
-//     function signaturePublicGenerator() external pure returns (uint256[2] point);
-//     function peddersenBaseG() external view returns (uint256[2] point);
-//     function peddersenBaseH() external view returns (uint256[2] point);
-//     function getGVectorComponent(uint256 index) external view returns (uint256[2] point);
-//     function getHVectorComponent(uint256 index) external view returns (uint256[2] point); 
-//     function getGVector() external view returns (uint256[2*256] points);
-//     function getHVector() external view returns (uint256[2*256] points);
-// }
-
 contract PublicParameters {
 
     event VectorCreated(uint256 _i);
@@ -25,8 +11,9 @@ contract PublicParameters {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
     using Conversion for uint256;
-    uint256 public constant m = 16;
-    uint256 public constant n = 4;
+
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
 
     uint256[2] public signatureGenerator;
     uint256[2] public baseG;

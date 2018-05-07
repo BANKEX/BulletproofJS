@@ -7,9 +7,12 @@ import {PublicParameters} from "./PublicParameters.sol";
 contract EfficientInnerProductVerifier {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
-    event DebugEvent(uint256 indexed _i);
-    uint256 public constant m = 16;
-    uint256 public constant n = 4;
+
+    event DebugEvent(uint256 a, uint256 b, uint256 c);
+
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
+
     PublicParameters public publicParameters;
 
     function EfficientInnerProductVerifier(
@@ -95,13 +98,13 @@ contract EfficientInnerProductVerifier {
                 }
             }
         }
-
         b.g = multiExpGs(b.otherExponents);
         b.h = multiExpHsInversed(b.otherExponents, hs);
         b.prod = A.mul(B);
         b.cProof = b.g.mul(A)
             .add(b.h.mul(B))
             .add(H.mul(b.prod));
+
         return b.cProof.X == b.c.X && b.cProof.Y == b.c.Y;
     }
 

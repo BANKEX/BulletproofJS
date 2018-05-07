@@ -24,6 +24,7 @@ var MultiRangeProofVerifier = /** @class */ (function () {
         var q = params.getGroup().order;
         var challengeArr = commitments.getVector().concat([a, s]);
         var y = proofUtil_1.ProofUtils.computeChallenge(q, challengeArr);
+        // console.log(y.toString(10));
         var ys = fieldVector_1.FieldVector.pow(y, n, q);
         var z = proofUtil_1.ProofUtils.computeChallengeForBigIntegers(q, [y]);
         var zs = fieldVector_1.FieldVector.pow(z, m + 2, q).subVector(2, m + 2); // 1, z, z^2, z^3 ... -> z^2, z^3 ...

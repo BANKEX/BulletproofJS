@@ -14,15 +14,14 @@ contract CoinMixer {
     event Transfer(uint256 indexed _index, uint256 indexed _X, uint256 indexed _Y, uint256 _assetID, bytes _data);
     event Withdraw(address indexed _address, uint256 indexed _assetID, uint256 _amount);
     event Merge(uint256 indexed _assetID, uint256 indexed _publicKey0_X, uint256 _publicKey0_Y, uint256 indexed _publicKey1_X, uint256 _publicKey1_Y, uint256 _newPublicKey_X, uint256 _newPublicKey_Y);
-    event DebugEvent(uint256 indexed _0, bool indexed _1, bytes32 indexed _2);
 
     SchnorrVerifier public schnorrVerifier;
     PublicParameters public publicParameters;
     RangeProofVerifier public rangeProofVerifier;
     TokenProxy public tokenProxy;
 
-    uint256 public constant m = 16;
-    uint256 public constant n = 4;
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
 
     function CoinMixer(
         address _schnorrVerifier,
@@ -58,8 +57,6 @@ contract CoinMixer {
         uint256 convertedValue = tokenProxy.convertFromDeposit(_value, _assetID);
         require(convertedValue < 2**m);
         alt_bn128.G1Point memory output = publicParameters.G().mul(convertedValue);
-        // alt_bn128.G1Point memory blindingFactor = alt_bn128.G1Point(_blindingFactor[0], _blindingFactor[1]);
-        // output = output.add(blindingFactor);
         outputs[_assetID][_publicKey[0]][_publicKey[1]] = output;
         emit Deposit(_publicKey[0], _publicKey[1], _assetID, convertedValue);
         return true;

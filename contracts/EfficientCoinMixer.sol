@@ -5,7 +5,7 @@ import "./alt_bn128.sol";
 import "./TokenProxy.sol";
 import "./SchnorrVerifier.sol";
 
-contract CoinMixer {
+contract EfficientCoinMixer {
     using alt_bn128 for alt_bn128.G1Point;
     using alt_bn128 for uint256;
 
@@ -16,13 +16,15 @@ contract CoinMixer {
     event Withdraw(address indexed _address, uint256 indexed _assetID, uint256 _amount);
     event Merge(uint256 indexed _assetID, uint256 indexed _publicKey0_X, uint256 _publicKey0_Y, uint256 indexed _publicKey1_X, uint256 _publicKey1_Y, uint256 _newPublicKey_X, uint256 _newPublicKey_Y);
 
+    event DebugEvent(uint256 a, uint256 b, uint256 c);
+
     SchnorrVerifier public schnorrVerifier;
     PublicParameters public publicParameters;
     MultiRangeProofVerifier public multiRangeProofVerifier;
     TokenProxy public tokenProxy;
 
-    uint256 public constant m = 16;
-    uint256 public constant n = 4;
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
 
     constructor (
         address _schnorrVerifier,
@@ -101,22 +103,27 @@ contract CoinMixer {
         require(_outputKeyExchangeData.length == 2*_numOfInsAndOuts[1]);
         Board memory b;
         uint256 i = 0;
-        uint256 shift = 0;
-        for (i = 0; i < 2; i++){
+        for (i = 0; i < 2; i++) {
             b.outputConservationSignature[i] = _parametersArray[i];
         }
-        shift = 2;
+        uint256 shift = 2;
+        b.inputPublicKeys = new alt_bn128.G1Point[](_numOfInsAndOuts[0]);
+        b.inputSchnorrSignatures = new uint256[](2*_numOfInsAndOuts[0]);
         for (i = 0; i < _numOfInsAndOuts[0]; i++) {
             b.inputPublicKeys[i] = alt_bn128.G1Point(_parametersArray[shift + 4*i], _parametersArray[shift + 4*i + 1]);
             b.inputSchnorrSignatures[2*i] = _parametersArray[shift + 4*i+2];
             b.inputSchnorrSignatures[2*i+1] = _parametersArray[shift + 4*i+3];
         }
         shift = shift + 4*_numOfInsAndOuts[0];
-        for (i = 0; i < _numOfInsAndOuts[0]; i++) {
+        b.outputPublicKeys = new alt_bn128.G1Point[](_numOfInsAndOuts[1]);
+        b.outputs = new uint256[](_numOfInsAndOuts[1]*2);
+        b.outputIndexes = new uint256[](_numOfInsAndOuts[1]);
+        b.outputKeyExchangeData = new bytes32[](_numOfInsAndOuts[1]*2);
+        for (i = 0; i < _numOfInsAndOuts[1]; i++) {
             b.outputPublicKeys[i] = alt_bn128.G1Point(_parametersArray[shift + 5*i], _parametersArray[shift + 5*i + 1]);
-            b.outputs[2*i] = _parametersArray[shift + 5*i+2];
+            b.outputs[2*i] = _parametersArray[shift + 5*i + 2];
             b.outputs[2*i+1] = _parametersArray[shift + 5*i + 3];
-            b.outputIndexes[i] = _parametersArray[shift + 5*i+4];
+            b.outputIndexes[i] = _parametersArray[shift + 5*i + 4];
             b.outputKeyExchangeData[2*i] = _outputKeyExchangeData[2*i];
             b.outputKeyExchangeData[2*i+1] = _outputKeyExchangeData[2*i+1]; 
         }
@@ -145,8 +152,10 @@ contract CoinMixer {
         }
         // now check conservation law
         for (i = 0; i < b.outputPublicKeys.length; i++) {
+            require(outputs[b.assetID][b.outputPublicKeys[i].X][b.outputPublicKeys[i].Y].X == 0);
+            require(outputs[b.assetID][b.outputPublicKeys[i].X][b.outputPublicKeys[i].Y].Y == 0);
             reusablePoints[1] = alt_bn128.G1Point(b.outputs[2*i], b.outputs[2*i+1]); // new output
-            reusablePoints[0] = reusablePoints[0].add(reusablePoints[2].neg());
+            reusablePoints[0] = reusablePoints[0].add(reusablePoints[1].neg());
             outputs[b.assetID][b.outputPublicKeys[i].X][b.outputPublicKeys[i].Y] = reusablePoints[1];
             emit Transfer(b.outputIndexes[i], b.outputPublicKeys[i].X, b.outputPublicKeys[i].Y, b.assetID, b.outputKeyExchangeData[2*i], b.outputKeyExchangeData[2*i+1]);
         }

@@ -9,8 +9,10 @@ contract RangeProofVerifier {
     using alt_bn128 for uint256;
     using alt_bn128 for alt_bn128.G1Point;
     event DebugEvent(uint256 indexed _i);
-    uint256 public constant m = 16;
-    uint256 public constant n = 4;
+
+    uint256 public constant m = 64;
+    uint256 public constant n = 6;
+
     PublicParameters public publicParameters;
     EfficientInnerProductVerifier public ipVerifier;
 

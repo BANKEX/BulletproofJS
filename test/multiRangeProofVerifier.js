@@ -18,11 +18,11 @@ const t = require('truffle-test-utils')
 t.init()
 // const expectThrow = require("../helpers/expectThrow");
 
-const M = 16;
-const N = 4;
+const M = 64;
+const N = 6;
 
 contract('MultiRangeProofVerifier', async (accounts) => {
-    // return
+    // return 
 
     var rangeProofVerifier;
     var publicParams;
@@ -79,24 +79,8 @@ contract('MultiRangeProofVerifier', async (accounts) => {
         console.log('Complete. Inner product proof verifier address: ' + ipVerifier.address);
 
         rangeProofVerifier = await EthereumRangeProofVerifier.new(publicParams.address, ipVerifier.address, {from: operator});
-        // for (let i = 0; i < 100; i++) {
-        //     try{
-        //         await rangeProofVerifier.producePowers()
-        //     } catch(err) {
-        //         break
-        //     }
-        // }
-        // const lastTwo = await rangeProofVerifier.lastPowerCreated();
-        // assert(lastTwo.toString() == "" + M, "Failed to create powers");
 
-        // const TWO = new BN(2);
-        // for (let i = 0; i < M; i++) {
-        //     const p = await rangeProofVerifier.twos(i)
-        //     const I = new BN(i);
-        //     const expe = TWO.pow(I).umod(group.primeFieldSize);
-        //     assert(p.cmp(expe) === 0, "Created power is invalid")
-        // }
-
+        console.log('Complete. Multi range proof verifier address: ' + rangeProofVerifier.address);
     })
 
     it('check single proof', async () => {
@@ -104,17 +88,21 @@ contract('MultiRangeProofVerifier', async (accounts) => {
     const total = new BN(10);
     const number = new BN(7);
     const change = new BN(3);
-
+    const extra = new BN(1);
+    const zero = new BN(0);
+    
     const q = group.order;
     console.log("Group order = " + q.toString(10) + "\n");
     const parameters = GeneratorParams.generateParams(M, group);
     const witness = new PeddersenCommitment(parameters.getBase(), number, ProofUtils.randomNumber());
     const witness_change = new PeddersenCommitment(parameters.getBase(), change, ProofUtils.randomNumber());
-    const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment()], group)
+    const witness_extra = new PeddersenCommitment(parameters.getBase(), extra, ProofUtils.randomNumber());
+    const witness_zero = new PeddersenCommitment(parameters.getBase(), zero, ProofUtils.randomNumber());
+    const commitments = new GeneratorVector([witness.getCommitment(), witness_change.getCommitment(), witness_extra.getCommitment(), witness_zero.getCommitment()], group)
     const prover = new MultiRangeProofProver();
-    const proof = prover.generateProof(parameters, commitments, [witness, witness_change]);
+    const proof = prover.generateProof(parameters, commitments, [witness, witness_change, witness_extra, witness_zero]);
     const verifier = new MultiRangeProofVerifier();
-    const valid = verifier.verify(parameters, commitments, proof);
+    let valid = verifier.verify(parameters, commitments, proof);
     console.log("For two proofs proof size is: scalaras " + proof.numInts() + ", field elements " + proof.numElements());
     console.log("Multi range proof is " + valid + "\n");
 
@@ -124,10 +112,10 @@ contract('MultiRangeProofVerifier', async (accounts) => {
         // uint256[2*n] ls_coords, // 2 * n
         // uint256[2*n] rs_coords  // 2 * n
         const comms = [];
-        comms.push(commitments.getVector()[0].getX())
-        comms.push(commitments.getVector()[0].getY())
-        comms.push(commitments.getVector()[1].getX())
-        comms.push(commitments.getVector()[1].getY())
+        for (let i=0; i < commitments.getVector().length; i++) {
+            comms.push(commitments.getVector()[i].getX())
+            comms.push(commitments.getVector()[i].getY())
+        }
 
         const coords = [];
         coords.push(proof.getaI().getX())
@@ -186,7 +174,7 @@ contract('MultiRangeProofVerifier', async (accounts) => {
             ls_coords,
             rs_coords);
 
-        console.log("Aggregated proof gas estimate = " + gasEstimate)
+        console.log("Aggregated proof of " + M + " total bits gas estimate = " + gasEstimate)
 
         const ethValidCall = await rangeProofVerifier.verify.call(comms, coords,
             scalars,
