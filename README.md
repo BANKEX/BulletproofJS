@@ -17,8 +17,8 @@
 
 ## Authors
 
-Alex Vlasov, [@shamatar](https://github.com/shamatar),  av@bankexfoundation.org
-Sergey Vasilyev, [@shamatar](https://github.com/swasilyev),  swasilyev@gmail.com
+- Alex Vlasov, [@shamatar](https://github.com/shamatar),  av@bankexfoundation.org
+- Sergey Vasilyev, [@shamatar](https://github.com/swasilyev),  swasilyev@gmail.com
 
 ## License
 
