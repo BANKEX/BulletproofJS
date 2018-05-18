@@ -31,7 +31,7 @@ const M = 64;
 const N = 6;
 
 contract('Protocol test', async (accounts) => {
-    // return
+    return
 
     var rangeProofVerifier;
     var publicParams;

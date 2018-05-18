@@ -100,23 +100,23 @@ contract('Protocol test', async (accounts) => {
         console.log('Inner product proof verifier address: ' + ipVerifier.address);
 
         rangeProofVerifier = await EthereumRangeProofVerifier.new(publicParams.address, ipVerifier.address, {from: operator});
-        for (let i = 0; i < 100; i++) {
-            try{
-                await rangeProofVerifier.producePowers()
-            } catch(err) {
-                break
-            }
-        }
-        const lastTwo = await rangeProofVerifier.lastPowerCreated();
-        assert(lastTwo.toString() == "" + M, "Failed to create powers");
+        // for (let i = 0; i < 100; i++) {
+        //     try{
+        //         await rangeProofVerifier.producePowers()
+        //     } catch(err) {
+        //         break
+        //     }
+        // }
+        // const lastTwo = await rangeProofVerifier.lastPowerCreated();
+        // assert(lastTwo.toString() == "" + M, "Failed to create powers");
 
-        const TWO = new BN(2);
-        for (let i = 0; i < M; i++) {
-            const p = await rangeProofVerifier.twos(i)
-            const I = new BN(i);
-            const expe = TWO.pow(I).umod(group.primeFieldSize);
-            assert(p.cmp(expe) === 0, "Created power is invalid")
-        }
+        // const TWO = new BN(2);
+        // for (let i = 0; i < M; i++) {
+        //     const p = await rangeProofVerifier.twos(i)
+        //     const I = new BN(i);
+        //     const expe = TWO.pow(I).umod(group.primeFieldSize);
+        //     assert(p.cmp(expe) === 0, "Created power is invalid")
+        // }
         console.log('Range proof verifier address: ' + rangeProofVerifier.address);
         // address _schnorrVerifier,
         // address _publicParameters,

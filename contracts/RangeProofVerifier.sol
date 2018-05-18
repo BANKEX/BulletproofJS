@@ -16,8 +16,8 @@ contract RangeProofVerifier {
     PublicParameters public publicParameters;
     EfficientInnerProductVerifier public ipVerifier;
 
-    uint256[m] public twos;
-    uint256 public lastPowerCreated = 0;
+    // uint256[m] public twos;
+    // uint256 public lastPowerCreated = 0;
 
     constructor (
         address _publicParameters,
@@ -33,28 +33,28 @@ contract RangeProofVerifier {
         require(n == ipVerifier.n());
     }
 
-    function producePowers() public returns(bool success) {
-        require(lastPowerCreated < m);
-        uint256 base = 2;
-        uint256 maxToCreate = m - lastPowerCreated;
-        if (maxToCreate > n) {
-            maxToCreate = n;
-        }
-        uint256 i;
-        if (lastPowerCreated == 0) {
-            twos[0] = 1;
-            twos[1] = base;
-            for (i = 2; i < m; i++) {
-                twos[i] = twos[i-1].mul(base);
-            }
-        } else {
-            for (i = lastPowerCreated; i < lastPowerCreated + maxToCreate; i++) {
-                twos[i] = twos[i-1].mul(base);
-            }
-        }
-        lastPowerCreated = lastPowerCreated + maxToCreate;
-        return true;
-    }
+    // function producePowers() public returns(bool success) {
+    //     require(lastPowerCreated < m);
+    //     uint256 base = 2;
+    //     uint256 maxToCreate = m - lastPowerCreated;
+    //     if (maxToCreate > n) {
+    //         maxToCreate = n;
+    //     }
+    //     uint256 i;
+    //     if (lastPowerCreated == 0) {
+    //         twos[0] = 1;
+    //         twos[1] = base;
+    //         for (i = 2; i < m; i++) {
+    //             twos[i] = twos[i-1].mul(base);
+    //         }
+    //     } else {
+    //         for (i = lastPowerCreated; i < lastPowerCreated + maxToCreate; i++) {
+    //             twos[i] = twos[i-1].mul(base);
+    //         }
+    //     }
+    //     lastPowerCreated = lastPowerCreated + maxToCreate;
+    //     return true;
+    // }
 
     function verify(
         uint256[10] coords, // [input_x, input_y, A_x, A_y, S_x, S_y, commits[0]_x, commits[0]_y, commits[1]_x, commits[1]_y]
@@ -130,7 +130,7 @@ contract RangeProofVerifier {
         b.z = uint256(keccak256(b.y)).mod();
         b.zSquared = b.z.mul(b.z);
         b.zCubed = b.zSquared.mul(b.z);
-        b.twoTimesZSquared = times(twos, b.zSquared);
+        b.twoTimesZSquared = times(powers(2), b.zSquared);
         b.x = uint256(keccak256(proof.commits[0].X, proof.commits[0].Y, proof.commits[1].X, proof.commits[1].Y)).mod();
         b.lhs = publicParameters.G().mul(proof.t).add(publicParameters.H().mul(proof.tauX));
         b.k = sumScalars(b.ys).mul(b.z.sub(b.zSquared)).sub(b.zCubed.mul(2 ** m).sub(b.zCubed));
@@ -202,6 +202,21 @@ contract RangeProofVerifier {
         for (uint256 i = 2; i < m; i++) {
             powers[i] = powers[i-1].mul(base);
         }
+    }
+
+    function powers(uint256 base, uint256 firstPower, uint256 numberOfPowers) internal pure returns (uint256[] powers) {
+        uint256[] memory pwrs = new uint256[](numberOfPowers);
+        pwrs[0] = 1;
+        uint256 i = 0;
+        if (firstPower != 0) {
+            for (i = 0; i < firstPower; i++) {
+                pwrs[0] = pwrs[0].mul(base);
+            }
+        } 
+        for (i = 1; i < numberOfPowers; i++) {
+            pwrs[i] = pwrs[i-1].mul(base);
+        }
+        return pwrs;
     }
 
     function times(uint256[m] v, uint256 x) internal pure returns (uint256[m] result) {

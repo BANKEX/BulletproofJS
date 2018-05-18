@@ -17,11 +17,11 @@ const t = require('truffle-test-utils')
 t.init()
 // const expectThrow = require("../helpers/expectThrow");
 
-const M = 16;
-const N = 4;
+const M = 64;
+const N = 6;
 
 contract('RangeProofVerifier', async (accounts) => {
-    return
+    // return
 
     var rangeProofVerifier;
     var publicParams;
@@ -81,24 +81,24 @@ contract('RangeProofVerifier', async (accounts) => {
         console.log('Complete. Inner product proof verifier address: ' + ipVerifier.address);
 
         rangeProofVerifier = await EthereumRangeProofVerifier.new(publicParams.address, ipVerifier.address, {from: operator});
-        for (let i = 0; i < 100; i++) {
-            try{
-                await rangeProofVerifier.producePowers()
-            } catch(err) {
-                break
-            }
-        }
-        const lastTwo = await rangeProofVerifier.lastPowerCreated();
-        assert(lastTwo.toString() == "" + M, "Failed to create powers");
+        // for (let i = 0; i < 100; i++) {
+        //     try{
+        //         await rangeProofVerifier.producePowers()
+        //     } catch(err) {
+        //         break
+        //     }
+        // }
+        // const lastTwo = await rangeProofVerifier.lastPowerCreated();
+        // assert(lastTwo.toString() == "" + M, "Failed to create powers");
 
-        const TWO = new BN(2);
-        for (let i = 0; i < M; i++) {
-            const p = await rangeProofVerifier.twos(i)
-            const I = new BN(i);
-            const expe = TWO.pow(I).umod(group.primeFieldSize);
-            assert(p.cmp(expe) === 0, "Created power is invalid")
-        }
-
+        // const TWO = new BN(2);
+        // for (let i = 0; i < M; i++) {
+        //     const p = await rangeProofVerifier.twos(i)
+        //     const I = new BN(i);
+        //     const expe = TWO.pow(I).umod(group.primeFieldSize);
+        //     assert(p.cmp(expe) === 0, "Created power is invalid")
+        // }
+        console.log('Complete. Range proof verifier address: ' + rangeProofVerifier.address);
     })
 
     it('check single proof', async () => {
@@ -162,7 +162,8 @@ contract('RangeProofVerifier', async (accounts) => {
             ls_coords,
             rs_coords);
 
-        console.log("Single proof gas estimate = " + gasEstimate)
+        console.log("Single proof for " + M + " bits gas estimate = " + gasEstimate)
+
         const ethValidCall = await rangeProofVerifier.verify.call(coords,
             scalars,
             ls_coords,

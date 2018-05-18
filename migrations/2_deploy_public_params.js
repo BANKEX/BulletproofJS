@@ -6,6 +6,7 @@ const M = 16;
 const N = 4;
 
 module.exports = async function(deployer, network, accounts) {
+    return;
     const operator = accounts[0];
     (async () => {
         await deployer.deploy(PublicParameters, {from: operator})
