@@ -4,7 +4,7 @@
 
 # Features
 
-- Set of local provers and verifiers for BulletProof range proofs (almost 1 to 1 compatible (hashing algo now always pads) with the original work from [Stanford](https://github.com/bbuenz/BulletProofLib)).
+- Set of local provers and verifiers for BulletProof range proofs (almost 1 to 1 compatible (hashing algo now always pads)) with the original work from [Stanford](https://github.com/bbuenz/BulletProofLib)).
 - Set of Ethereum smart-contracts for verification only, as well as libs for EC arithmetics and public parameters generation using "nothing up my sleeve" numbers.
 - Prototype Confidential Transactions contract taking care of various tokens, deposits, key exchange.
 - AES encryption for exchange of transaction values and blinding factors out of the box.
