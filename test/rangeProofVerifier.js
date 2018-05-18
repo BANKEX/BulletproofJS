@@ -186,5 +186,14 @@ contract('RangeProofVerifier', async (accounts) => {
         //     console.log(v.args._i.toString(16));
         // })
         // console.log("Ethereum proof is valid: " + ethValid + "\n");
+        const ethValidTX = await rangeProofVerifier.verify(coords,
+            scalars,
+            ls_coords,
+            rs_coords, {gas: 20000000});
+        ethValidTX.logs.map((el) => {
+            console.log("A = " + el.args.a.toString(10));
+            console.log("B = " + el.args.b.toString(10));
+            console.log("C = " + el.args.c.toString(10));
+        })
     })
 })

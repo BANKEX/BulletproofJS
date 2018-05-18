@@ -22,7 +22,7 @@ const M = 64;
 const N = 6;
 
 contract('MultiRangeProofVerifier', async (accounts) => {
-    // return 
+    return 
 
     var rangeProofVerifier;
     var publicParams;
@@ -183,6 +183,17 @@ contract('MultiRangeProofVerifier', async (accounts) => {
         assert(ethValidCall, "Multi range proof verification failed for Ethereum network")
         console.log("Ethereum proof is valid: " + ethValidCall + "\n");
         
+        const ethValidTX = await rangeProofVerifier.verify(comms, coords,
+            scalars,
+            ls_coords,
+            rs_coords, {from: operator, gas: 20000000});
+
+        ethValidTX.logs.map((el) => {
+            console.log("A = " + el.args.a.toString(10));
+            console.log("B = " + el.args.b.toString(10));
+            console.log("C = " + el.args.c.toString(10));
+        })
+        // console.log(JSON.stringify(ethValidTX.logs));
 
     })
 })

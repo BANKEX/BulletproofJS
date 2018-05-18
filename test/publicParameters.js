@@ -8,8 +8,8 @@ const t = require('truffle-test-utils')
 t.init()
 // const expectThrow = require("../helpers/expectThrow");
 
-const M = 16;
-const N = 4;
+const M = 64;
+const N = 6;
 contract('PublicParameters', async (accounts) => {
     return
     
@@ -18,6 +18,7 @@ contract('PublicParameters', async (accounts) => {
     const operator = accounts[0]
 
     beforeEach(async () => {
+        console.log("Public parameters bytecode length = " + (PublicParameters.bytecode.length-2)/2);
         publicParams = await PublicParameters.new({from: operator})
     })
 
@@ -62,5 +63,8 @@ contract('PublicParameters', async (accounts) => {
             const v = vectorsRef[i];
             assert(x.cmp(v.getX()) === 0 && y.cmp(v.getY()) === 0, "Invalid H vector + " + i);
         }
+
+        const gasEstimateForVector = await publicParams.getGVector.estimateGas();
+        console.log("Gas estimate to read set of " + M + " of Gs = " + gasEstimateForVector);
     })
 })

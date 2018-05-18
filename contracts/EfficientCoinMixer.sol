@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 import "./MultiRangeProofVerifier.sol";
 import "./alt_bn128.sol";

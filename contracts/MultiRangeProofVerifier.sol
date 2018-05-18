@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./alt_bn128.sol";
@@ -37,8 +37,9 @@ contract MultiRangeProofVerifier {
         uint256[2*n] ls_coords, // 2 * n
         uint256[2*n] rs_coords  // 2 * n
     ) public 
-    view 
+    // view 
     returns (bool) {
+        emit DebugEvent(0, 0, gasleft());
         require(commitments.length % 2 == 0);
         uint256 numOfCommitments = commitments.length/2;
         require(m % numOfCommitments == 0);
@@ -56,13 +57,12 @@ contract MultiRangeProofVerifier {
         multiRangeProof.t = scalars[2];
         InnerProductProof memory ipProof;
         multiRangeProof.ipProof = ipProof;
-        for (i = 0; i < n; i++) {
-            ipProof.ls[i] = alt_bn128.G1Point(ls_coords[2*i], ls_coords[2*i + 1]);
-            ipProof.rs[i] = alt_bn128.G1Point(rs_coords[2*i], rs_coords[2*i + 1]);
-        }
+        ipProof.ls = ls_coords;
+        ipProof.rs = rs_coords;
         ipProof.a = scalars[3];
         ipProof.b = scalars[4];
         uint256 yPrecomputed = uint256(keccak256(commitments, multiRangeProof.aI.X, multiRangeProof.aI.Y, multiRangeProof.s.X, multiRangeProof.s.Y)).mod();
+        emit DebugEvent(0, 1, gasleft());
         return verifyInternal(yPrecomputed, input, multiRangeProof);
     }
 
@@ -77,8 +77,8 @@ contract MultiRangeProofVerifier {
     }
 
     struct InnerProductProof {
-        alt_bn128.G1Point[n] ls;
-        alt_bn128.G1Point[n] rs;
+        uint256[2*n] ls;
+        uint256[2*n] rs;
         uint256 a;
         uint256 b;
     }
@@ -100,6 +100,7 @@ contract MultiRangeProofVerifier {
         uint256 uChallenge;
         alt_bn128.G1Point u;
         alt_bn128.G1Point P;
+        uint256 bitsPerNumber;
     }
 
     function verifyInternal(
@@ -109,24 +110,31 @@ contract MultiRangeProofVerifier {
     ) internal 
     view 
     returns (bool) {
-        uint256 bitsPerNumber = m / input.length;
+        emit DebugEvent(1, 0, gasleft());
+
+        alt_bn128.G1Point memory G = publicParameters.G();
+        alt_bn128.G1Point memory H = publicParameters.H();
+        alt_bn128.G1Point[m] memory gs = publicParameters.gs();
+        alt_bn128.G1Point[m] memory hs = publicParameters.hs();
+
         Board memory b;
+        b.bitsPerNumber = m / input.length;
         b.y = yPrecomputed;
         b.ys = powers(b.y);
         b.z = uint256(keccak256(b.y)).mod();
         b.zs = powers(b.z, 2, input.length);
-        b.twos = powers(2, 0, bitsPerNumber);
+        b.twos = powers(2, 0, b.bitsPerNumber);
 
         b.twoTimesZSquared = timesAndConcat(b.twos, b.zs);
         // const zSum = zs.sum().mul(z).umod(q);
         b.zSum = sumScalars(b.zs).mul(b.z);
         // const k = ys.sum().mul(z.sub(zs.get(0))).sub(zSum.shln(bitsPerNumber).sub(zSum)).umod(q);
-        b.k = sumScalars(b.ys).mul(b.z.sub(b.zs[0])).sub(b.zSum.mul(2 ** bitsPerNumber).sub(b.zSum));
+        b.k = sumScalars(b.ys).mul(b.z.sub(b.zs[0])).sub(b.zSum.mul(2 ** b.bitsPerNumber).sub(b.zSum));
 
         b.x = uint256(keccak256(proof.tCommits[0].X, proof.tCommits[0].Y, proof.tCommits[1].X, proof.tCommits[1].Y)).mod();
 
         // const lhs = base.commit(t, tauX);
-        b.lhs = publicParameters.G().mul(proof.t).add(publicParameters.H().mul(proof.tauX));
+        b.lhs = G.mul(proof.t).add(H.mul(proof.tauX));
 
         // const rhs = tCommits.commit([x, x.pow(TWO)])
         b.rhs = proof.tCommits[0].mul(b.x).add(proof.tCommits[1].mul(b.x.mul(b.x)));
@@ -135,7 +143,7 @@ contract MultiRangeProofVerifier {
             b.rhs = b.rhs.add(input[i].mul(b.zs[i]));
         }
         // .add(base.commit(k, ZERO));
-        b.rhs = b.rhs.add(publicParameters.G().mul(b.k));
+        b.rhs = b.rhs.add(G.mul(b.k));
         
         if (!b.rhs.eq(b.lhs)) {
             return false;
@@ -145,10 +153,10 @@ contract MultiRangeProofVerifier {
         b.uChallenge = uint256(keccak256(proof.tauX, proof.mu, proof.t)).mod();
 
         // const u = base.g.mul(uChallenge);
-        b.u = publicParameters.G().mul(b.uChallenge);
+        b.u = G.mul(b.uChallenge);
 
         // const hPrimes = hs.hadamard(ys.invert().getVector());
-        alt_bn128.G1Point[m] memory hPrimes = haddamard_inv(publicParameters.hs(), b.ys);
+        alt_bn128.G1Point[m] memory hPrimes = haddamard(hs, powers(b.y.inv()));
 
         // const hExp = ys.times(z).addVector(twoTimesZSquared);
         uint256[m] memory hExp = addVectors(times(b.ys, b.z), b.twoTimesZSquared);
@@ -156,14 +164,15 @@ contract MultiRangeProofVerifier {
         // const P = a.add(s.mul(x))
         b.P = proof.aI.add(proof.s.mul(b.x));
         // .add(gs.sum().mul(z.neg()))
-        b.P = b.P.add(sumPoints(publicParameters.gs()).mul(b.z.neg()));
+        b.P = b.P.add(sumPoints(gs).mul(b.z.neg()));
         // .add(hPrimes.commit(hExp.getVector()))
         b.P = b.P.add(commit(hPrimes, hExp));
         // .sub(base.h.mul(mu))
-        b.P = b.P.add(publicParameters.H().mul(proof.mu).neg());
+        b.P = b.P.add(H.mul(proof.mu).neg());
         // .add(u.mul(t));
         b.P = b.P.add(b.u.mul(proof.t));
-        return ipVerifier.verifyWithCustomParams(b.P, toXs(proof.ipProof.ls), toYs(proof.ipProof.ls), toXs(proof.ipProof.rs), toYs(proof.ipProof.rs), proof.ipProof.a, proof.ipProof.b, hPrimes, b.u);
+        emit DebugEvent(1, 1, gasleft());
+        return ipVerifier.verifyWithCustomParams(b.P, proof.ipProof.ls, proof.ipProof.rs, proof.ipProof.a, proof.ipProof.b, gs, hPrimes, b.u);
     }
 
     function addVectors(uint256[m] a, uint256[m] b) internal pure returns (uint256[m] result) {
@@ -172,20 +181,26 @@ contract MultiRangeProofVerifier {
         }
     }
 
-    function haddamard_inv(alt_bn128.G1Point[m] ps, uint256[m] ss) internal view returns (alt_bn128.G1Point[m] result) {
+    function haddamard(alt_bn128.G1Point[m] ps, uint256[m] ss) internal view returns (alt_bn128.G1Point[m] result) {
         for (uint256 i = 0; i < m; i++) {
-            result[i] = ps[i].mul(ss[i].inv());
+            result[i] = ps[i].mul(ss[i]);
         }
     }
 
+    // function haddamard_inv(alt_bn128.G1Point[m] ps, uint256[m] ss) internal view returns (alt_bn128.G1Point[m] result) {
+    //     for (uint256 i = 0; i < m; i++) {
+    //         result[i] = ps[i].mul(ss[i].inv());
+    //     }
+    // }
+
     function sumScalars(uint256[m] ys) internal pure returns (uint256 result) {
-        for (uint8 i = 0; i < m; i++) {
+        for (uint256 i = 0; i < m; i++) {
             result = result.add(ys[i]);
         }
     }
 
     function sumScalars(uint256[] ys) internal pure returns (uint256 result) {
-        for (uint8 i = 0; i < ys.length; i++) {
+        for (uint256 i = 0; i < ys.length; i++) {
             result = result.add(ys[i]);
         }
     }
@@ -204,17 +219,17 @@ contract MultiRangeProofVerifier {
         }
     }
 
-    function toXs(alt_bn128.G1Point[n] ps) internal pure returns (uint256[n] xs) {
-        for (uint256 i = 0; i < n; i++) {
-            xs[i] = ps[i].X;
-        }
-    }
+    // function toXs(alt_bn128.G1Point[n] ps) internal pure returns (uint256[n] xs) {
+    //     for (uint256 i = 0; i < n; i++) {
+    //         xs[i] = ps[i].X;
+    //     }
+    // }
 
-    function toYs(alt_bn128.G1Point[n] ps) internal pure returns (uint256[n] ys) {
-        for (uint256 i = 0; i < n; i++) {
-            ys[i] = ps[i].Y;
-        }
-    }
+    // function toYs(alt_bn128.G1Point[n] ps) internal pure returns (uint256[n] ys) {
+    //     for (uint256 i = 0; i < n; i++) {
+    //         ys[i] = ps[i].Y;
+    //     }
+    // }
 
     function powers(uint256 base) internal pure returns (uint256[m] powers) {
         powers[0] = 1;
