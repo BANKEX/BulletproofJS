@@ -94,23 +94,11 @@ contract PublicParameters {
     }
     
     function getGVector() public view returns (uint256[2*m] points) {
-        uint256[2] memory reusablePoints;
-        for (uint256 i = 0; i < m; i++) {
-            reusablePoints = getGVectorComponent(i);
-            points[i*2] = reusablePoints[0];
-            points[i*2 + 1] = reusablePoints[1];
-        }
-        return points;
+        return gVector;
     }
     
     function getHVector() public view returns (uint256[2*m] points) {
-        uint256[2] memory reusablePoints;
-        for (uint256 i = 0; i < m; i++) {
-            reusablePoints = getHVectorComponent(i);
-            points[i*2] = reusablePoints[0];
-            points[i*2 + 1] = reusablePoints[1];
-        }
-        return points;
+        return hVector;
     }
 
     function generator() public view returns (alt_bn128.G1Point memory p) {
@@ -118,19 +106,19 @@ contract PublicParameters {
     }
 
     function G() public view returns (alt_bn128.G1Point memory p) {
-        return assemblePoint(peddersenBaseG());
+        return assemblePoint(baseG);
     }
 
     function H() public view returns (alt_bn128.G1Point memory p) {
-        return assemblePoint(peddersenBaseH());
+        return assemblePoint(baseH);
     }
 
     function gs() public view returns(alt_bn128.G1Point[m] memory points){
-        return assemblePointsFromEncodings(getGVector());
+        return assemblePointsFromEncodings(gVector);
     }
 
     function hs() public view returns(alt_bn128.G1Point[m] memory points){
-        return assemblePointsFromEncodings(getHVector());
+        return assemblePointsFromEncodings(hVector);
     }
 
     function assemblePointsFromEncodings(uint256[m*2] _pointsEncoding) internal pure returns(alt_bn128.G1Point[m] memory points) {
@@ -143,29 +131,4 @@ contract PublicParameters {
     function assemblePoint(uint256[2] _encoding) internal pure returns(alt_bn128.G1Point memory point) {
         return alt_bn128.G1Point(_encoding[0], _encoding[1]);
     }
-
-    // function uintToString(uint256 index) internal pure returns(bytes memory res) {
-    //     res = index.uintToBytes();
-    //     if (res.length == 0) {
-    //         return "0";
-    //     }
-    //     return res;
-    // }
-
-    // function testToString(uint256 index) public view returns(bytes res) {
-    //     require(index < m);
-    //     return index.uintToBytes();
-    // }
-
-    // function testHash(uint256 index) public view returns(uint256 res) {
-    //     require(index < m);
-    //     bytes32 h = keccak256("G", index.uintToBytes());
-    //     return uint256(h);
-    // }
-
-    // function testHashAsBytes(uint256 index) public view returns(bytes32 res) {
-    //     require(index < m);
-    //     bytes32 h = keccak256("G", index.uintToBytes());
-    //     return h;
-    // }
 }

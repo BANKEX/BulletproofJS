@@ -11,7 +11,7 @@ t.init()
 const M = 64;
 const N = 6;
 contract('PublicParameters', async (accounts) => {
-    return
+    // return
     
     var publicParams;
 
