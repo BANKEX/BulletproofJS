@@ -3,6 +3,7 @@ const util = require("util");
 
 
 contract('GasTester', async (accounts) => {
+    return;
     const operator = accounts[0]
 
     it('check single signature', async () => {

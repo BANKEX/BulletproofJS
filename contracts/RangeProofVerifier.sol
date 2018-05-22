@@ -64,7 +64,6 @@ contract RangeProofVerifier {
     ) public 
     // view 
     returns (bool) {
-        emit DebugEvent(0, 0, gasleft());
         RangeProof memory rangeProof;
         alt_bn128.G1Point memory input = alt_bn128.G1Point(coords[0], coords[1]);
         rangeProof.A = alt_bn128.G1Point(coords[2], coords[3]);
@@ -79,7 +78,6 @@ contract RangeProofVerifier {
         ipProof.rs = rs_coords;
         ipProof.a = scalars[3];
         ipProof.b = scalars[4];
-        emit DebugEvent(0, 1, gasleft());
         return verifyInternal(input, rangeProof);
     }
 
@@ -124,12 +122,10 @@ contract RangeProofVerifier {
     ) internal 
     view 
     returns (bool) {
-        emit DebugEvent(1, 0, gasleft());
         alt_bn128.G1Point memory G = publicParameters.G();
         alt_bn128.G1Point memory H = publicParameters.H();
         alt_bn128.G1Point[m] memory gs = publicParameters.gs();
         alt_bn128.G1Point[m] memory hs = publicParameters.hs();
-        emit DebugEvent(1, 1, gasleft());
         Board memory b;
         b.y = uint256(keccak256(input.X, input.Y, proof.A.X, proof.A.Y, proof.S.X, proof.S.Y)).mod();
         b.ys = powers(b.y);
@@ -148,14 +144,13 @@ contract RangeProofVerifier {
         }
         b.uChallenge = uint256(keccak256(proof.tauX, proof.mu, proof.t)).mod();
         b.u = G.mul(b.uChallenge);
-        alt_bn128.G1Point[m] memory hPrimes = haddamard(hs, powers(b.y.inv()));
+        alt_bn128.G1Point[m] memory hPrimes = haddamard(hs, powers(b.y.inv())); // the most expensive, roughly 64*40000 gas
         uint256[m] memory hExp = addVectors(times(b.ys, b.z), b.twoTimesZSquared);
         b.P = proof.A.add(proof.S.mul(b.x));
         b.P = b.P.add(sumPoints(gs).mul(b.z.neg()));
-        b.P = b.P.add(commit(hPrimes, hExp));
+        b.P = b.P.add(commit(hPrimes, hExp)); // the most expensive, 64*40000
         b.P = b.P.add(H.mul(proof.mu).neg());
         b.P = b.P.add(b.u.mul(proof.t));
-        emit DebugEvent(1, 2, gasleft());
         return ipVerifier.verifyWithCustomParams(b.P, proof.ipProof.ls, proof.ipProof.rs, proof.ipProof.a, proof.ipProof.b, gs, hPrimes, b.u);
     }
 

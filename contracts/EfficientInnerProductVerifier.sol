@@ -60,9 +60,7 @@ contract EfficientInnerProductVerifier {
     function verifyWithCustomParams(
         alt_bn128.G1Point c,
         uint256[2*n] ls,
-        // uint256[n] ls_y,
         uint256[2*n] rs,
-        // uint256[n] rs_y,
         uint256 A,
         uint256 B,
         alt_bn128.G1Point[m] gs,
@@ -71,7 +69,6 @@ contract EfficientInnerProductVerifier {
     ) public
     view 
     returns (bool) {
-        emit DebugEvent(2, 0, gasleft());
         Board memory b;
         b.c = c;
         for (uint256 i = 0; i < n; i++) {
@@ -87,7 +84,6 @@ contract EfficientInnerProductVerifier {
                 .add(b.c);
             b.challenges[i] = b.x;
         }
-        emit DebugEvent(2, 1, gasleft());
         b.otherExponents[0] = b.challenges[0];
         for (i = 1; i < n; i++) {
             b.otherExponents[0] = b.otherExponents[0].mul(b.challenges[i]);
@@ -103,14 +99,12 @@ contract EfficientInnerProductVerifier {
                 }
             }
         }
-        emit DebugEvent(2, 2, gasleft());
-        b.g = multiExp(b.otherExponents, gs);
-        b.h = multiExpInversed(b.otherExponents, hs);
+        b.g = multiExp(b.otherExponents, gs); // 64*40000 gas
+        b.h = multiExpInversed(b.otherExponents, hs); //64*40000 gas
         b.prod = A.mul(B);
         b.cProof = b.g.mul(A)
             .add(b.h.mul(B))
             .add(H.mul(b.prod));
-        emit DebugEvent(2, 3, gasleft());
         return b.cProof.X == b.c.X && b.cProof.Y == b.c.Y;
     }
 

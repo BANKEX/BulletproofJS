@@ -53,6 +53,12 @@ library alt_bn128 {
     // }
 
     function mul(G1Point p, uint256 s) internal view returns (G1Point r) {
+        if (s == 1) {
+            return p;
+        }
+        if (s == 2) {
+            return add(p, p);
+        }
         uint256[3] memory input;
         input[0] = p.X;
         input[1] = p.Y;
