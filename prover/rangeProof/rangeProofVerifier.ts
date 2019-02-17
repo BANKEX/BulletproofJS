@@ -11,6 +11,7 @@ import {EfficientInnerProductVerifier} from "../innerProduct/efficientInnerProdu
 export class RangeProofVerifier {
 
     public verify(params: GeneratorParams, input: ECPoint, proof: RangeProof) : Boolean {
+        try {
         const vectorBase = params.getVectorBase();
         const base = params.getBase();
         const n = vectorBase.getGs().size();
@@ -56,6 +57,11 @@ export class RangeProofVerifier {
         const verifier = new EfficientInnerProductVerifier();
         // console.log(P.getX().toString(16));
         return verifier.verify(primeBase, P, proof.getProductProof());
+        }
+        catch(error){
+              console.log("failed with error",error)
+              return false;
+        }
 
     }
 }

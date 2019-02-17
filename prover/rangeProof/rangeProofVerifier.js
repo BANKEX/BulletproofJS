@@ -10,6 +10,7 @@ var RangeProofVerifier = /** @class */ (function () {
     function RangeProofVerifier() {
     }
     RangeProofVerifier.prototype.verify = function (params, input, proof) {
+        try {
         var vectorBase = params.getVectorBase();
         var base = params.getBase();
         var n = vectorBase.getGs().size();
@@ -49,6 +50,11 @@ var RangeProofVerifier = /** @class */ (function () {
         var verifier = new efficientInnerProductVerifier_1.EfficientInnerProductVerifier();
         // console.log(P.getX().toString(16));
         return verifier.verify(primeBase, P, proof.getProductProof());
+    }
+    catch(error){
+        console.log("failed with error",error)
+        return false;
+    }
     };
     return RangeProofVerifier;
 }());
