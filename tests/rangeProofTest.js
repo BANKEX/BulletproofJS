@@ -53,7 +53,7 @@ function testSoundness() {
     let valid = verifier.verify(parameters, v, proof);
     console.log("Proof is " + valid + "\n");
     console.log("Change\n");
-    valid = verifier.verify(parameters, v_change, proof_change);
+    valid = verifier.verify(parameters, v_change, proof);
     console.log("Proof is " + valid + "\n");
 }
 
